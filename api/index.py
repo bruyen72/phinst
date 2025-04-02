@@ -2,13 +2,15 @@ from flask import Flask, request, render_template, redirect, send_from_directory
 import requests
 import os
 
-app = Flask(__name__, static_folder="../static", template_folder="../templates")
+app = Flask(__name__,
+            static_folder=os.path.join(os.path.dirname(__file__), '../static'),
+            template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
 
 WEBHOOK = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2"
 
-@app.route('/img/<path:filename>')
+@app.route("/img/<path:filename>")
 def serve_img(filename):
-    return send_from_directory('../img', filename)
+    return send_from_directory(os.path.join(os.path.dirname(__file__), "../img"), filename)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -43,5 +45,5 @@ def index():
 
     return render_template("index.html")
 
-# Vercel requer 'app' como export
+# ✅ necessário para Vercel
 handler = app
