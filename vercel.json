@@ -1,12 +1,11 @@
 {
     "version": 2,
     "routes": [
-      { "src": "/index", "dest": "/index" },
-      { "src": "/api/(.*)", "dest": "/api/$1" }
+      { "src": "/(.*)", "dest": "/api/index.py" }
     ],
     "functions": {
       "api/*.py": {
-        "runtime": "python3.9"
+        "runtime": "python@3.9"
       }
     }
   }
