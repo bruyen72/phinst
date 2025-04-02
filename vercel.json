@@ -1,6 +1,20 @@
 {
-    "rewrites": [
-      { "source": "/", "destination": "/index.html" }
+    "version": 2,
+    "builds": [
+      {
+        "src": "api/index.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/img/(.*)",
+        "dest": "/img/$1"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "api/index.py"
+      }
     ]
   }
   
