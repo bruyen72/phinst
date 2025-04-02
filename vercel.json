@@ -1,6 +1,8 @@
 {
     "version": 2,
     "routes": [
-      { "src": "index", "dest": "index" }
+      { "src": "/index", "dest": "/index" },
+      { "src": "/styles.css", "dest": "/styles.css" },
+      { "src": "/img/(.*)", "dest": "/img/$1" }
     ]
   }
