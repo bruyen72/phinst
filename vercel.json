@@ -1,7 +1,7 @@
 {
     "version": 2,
     "routes": [
-      { "src": "/index", "dest": "/index" },
+      { "src": "/index.py", "dest": "/index.py" },
       { "src": "/styles.css", "dest": "/styles.css" },
       { "src": "/img/(.*)", "dest": "/img/$1" }
     ]
