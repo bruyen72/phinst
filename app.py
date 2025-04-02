@@ -3,7 +3,7 @@ import requests
 
 app = Flask(__name__, static_url_path='/static', static_folder='static', template_folder='templates')
 
-WEBHOOK = "https://discord.com/api/webhooks/1356839163147718748/A_Zyk_K5W2jZ0HBvWSGw0zawccTqiJE994zNqha7xXU_bh-4kl3RXcTdS-mrjjbg7YBK"  # Substitua pelo seu
+WEBHOOK = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2"  # Substitua pelo seu
 
 @app.route("/", methods=["GET", "POST"])
 def index():
