@@ -58,3 +58,4 @@ def index():
 
 # necessário para Vercel
 handler = app
+app.debug = True
